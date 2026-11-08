@@ -17,8 +17,14 @@ _(GIF o video de la demo: se agrega al cerrar el proyecto)_
 
 ```mermaid
 flowchart LR
-  U[Usuario] --> A[Asistente]
-  A --> H[Herramientas]
+  C[Cliente] -->|mensaje| A[asistente.llm.responder]
+  P[prompts/sistema.md + datos/politicas.md] --> A
+  A -->|1| G[Gemini free tier]
+  A -->|2 fallback| Q[Groq gpt-oss-20b]
+  A -->|3 fallback| O[Ollama local]
+  A --> V{Valida con Pydantic}
+  V --> R[Respuesta JSON]
+  T[tests/casos + scripts/correr_casos] --> A
 ```
 
 _(Se actualiza a medida que se suman módulos.)_
@@ -35,6 +41,9 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 cp .env.example .env   # completar claves
 pytest
+
+# Probar el asistente contra los 10 casos difíciles (usa las claves de .env)
+python -m scripts.correr_casos --repeticiones 3
 ```
 
 ## Roadmap
@@ -42,7 +51,7 @@ pytest
 Cada ítem es una issue; se cierra con el commit que la resuelve (`Closes #N`).
 
 - [ ] L01 · Cómo funciona un LLM hoy y el mapa de modelos
-- [ ] L02 · Context engineering y prompting profesional
+- [x] L02 · Context engineering y prompting profesional
 - [ ] L03 · LLMs desde código: API, streaming y tool use
 - [ ] L04 · Claude Code profesional
 - [ ] L05 · MCP: conectar la IA con cualquier sistema
