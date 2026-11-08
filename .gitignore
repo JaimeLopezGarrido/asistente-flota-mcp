@@ -1,0 +1,27 @@
+# Secretos: nunca al repo
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+.next/
+
+# Varios
+.DS_Store
+*.log
+*.sqlite3
+*.db
