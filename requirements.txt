@@ -1,1 +1,5 @@
-# Dependencias de ejecución (se suman en cada lección)
+# Dependencias de ejecución
+pydantic>=2.9
+google-genai>=1.60
+openai>=1.60
+python-dotenv>=1.0
