@@ -1,0 +1,29 @@
+{
+  "_aviso": "Datos FICTICIOS para la demo. Montos en pesos argentinos.",
+  "moneda": "ARS",
+  "km_por_dia": 300,
+  "recargo_temporada_alta_pct": 30,
+  "temporada_alta": [
+    {"desde": "2026-12-15", "hasta": "2027-02-28"},
+    {"desde": "2027-07-01", "hasta": "2027-07-31"}
+  ],
+  "cargos": {"retiro_aeropuerto": 25000, "mascota": 40000, "cruce_chile": 120000, "garantia": 500000},
+  "autos": [
+    {"id": "A01", "modelo": "Fiat Cronos", "categoria": "economico", "plazas": 5, "transmision": "manual",
+     "tarifa_diaria": 45000, "cruce_chile": true, "reservas": [{"desde": "2026-12-20", "hasta": "2026-12-27"}]},
+    {"id": "A02", "modelo": "Volkswagen Polo", "categoria": "economico", "plazas": 5, "transmision": "automatica",
+     "tarifa_diaria": 52000, "cruce_chile": true, "reservas": []},
+    {"id": "A03", "modelo": "Toyota Corolla Cross", "categoria": "suv", "plazas": 5, "transmision": "automatica",
+     "tarifa_diaria": 78000, "cruce_chile": true, "reservas": [{"desde": "2026-12-18", "hasta": "2027-01-05"}]},
+    {"id": "A04", "modelo": "Jeep Renegade", "categoria": "suv", "plazas": 5, "transmision": "manual",
+     "tarifa_diaria": 70000, "cruce_chile": false, "reservas": []},
+    {"id": "A05", "modelo": "Toyota Hilux 4x4", "categoria": "camioneta", "plazas": 5, "transmision": "manual",
+     "tarifa_diaria": 95000, "cruce_chile": true, "reservas": [{"desde": "2026-12-22", "hasta": "2026-12-29"}]},
+    {"id": "A06", "modelo": "Ford Ranger 4x4", "categoria": "camioneta", "plazas": 5, "transmision": "automatica",
+     "tarifa_diaria": 105000, "cruce_chile": true, "reservas": [{"desde": "2027-01-02", "hasta": "2027-01-10"}]},
+    {"id": "A07", "modelo": "Chevrolet Spin", "categoria": "familiar", "plazas": 7, "transmision": "manual",
+     "tarifa_diaria": 68000, "cruce_chile": false, "reservas": []},
+    {"id": "A08", "modelo": "Peugeot 208", "categoria": "economico", "plazas": 5, "transmision": "manual",
+     "tarifa_diaria": 47000, "cruce_chile": false, "reservas": [{"desde": "2026-11-20", "hasta": "2026-11-23"}]}
+  ]
+}
