@@ -1,5 +1,12 @@
 # Cambios
 
+## 0.3.0 · 2026-11-08
+
+- Flota ficticia en datos/flota.json y herramientas buscar_disponibilidad, cotizar y consultar_politica, con tests.
+- Agente con loop de tool use (formato compatible con OpenAI), límite de vueltas y fallback Gemini, Groq y Ollama.
+- Chat por terminal (scripts/chat.py) y demo de streaming (scripts/streaming.py).
+- ADR 0003 (tool use).
+
 ## 0.2.0 · 2026-11-07
 
 - System prompt con etiquetas XML, reglas con el porqué, few-shot y políticas ficticias numeradas.
