@@ -17,14 +17,15 @@ _(GIF o video de la demo: se agrega al cerrar el proyecto)_
 
 ```mermaid
 flowchart LR
-  C[Cliente] -->|mensaje| A[asistente.llm.responder]
-  P[prompts/sistema.md + datos/politicas.md] --> A
-  A -->|1| G[Gemini free tier]
-  A -->|2 fallback| Q[Groq gpt-oss-20b]
-  A -->|3 fallback| O[Ollama local]
-  A --> V{Valida con Pydantic}
-  V --> R[Respuesta JSON]
-  T[tests/casos + scripts/correr_casos] --> A
+  C[Cliente] -->|mensaje| A[asistente.agente.conversar]
+  I[prompts/agente.md] --> A
+  A -->|mensajes + herramientas| M[Modelo: Gemini, Groq u Ollama]
+  M -->|tool_calls| A
+  A --> H[asistente.herramientas.ejecutar]
+  H --> FL[(datos/flota.json)]
+  H --> PO[(datos/politicas.md)]
+  H -->|resultado JSON| A
+  A -->|respuesta final| C
 ```
 
 _(Se actualiza a medida que se suman módulos.)_
@@ -46,13 +47,21 @@ pytest
 python -m scripts.correr_casos --repeticiones 3
 ```
 
+## Probar el agente
+
+```bash
+python -m scripts.chat                       # chat en la terminal (usa las claves de .env)
+python -m scripts.chat --proveedores groq    # forzar un proveedor
+python -m scripts.streaming                  # demo de streaming
+```
+
 ## Roadmap
 
 Cada ítem es una issue; se cierra con el commit que la resuelve (`Closes #N`).
 
 - [ ] L01 · Cómo funciona un LLM hoy y el mapa de modelos
 - [x] L02 · Context engineering y prompting profesional
-- [ ] L03 · LLMs desde código: API, streaming y tool use
+- [x] L03 · LLMs desde código: API, streaming y tool use
 - [ ] L04 · Claude Code profesional
 - [ ] L05 · MCP: conectar la IA con cualquier sistema
 - [ ] L06 · Automatización con IA: n8n, agentes y código
