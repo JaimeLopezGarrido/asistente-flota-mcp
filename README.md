@@ -55,6 +55,14 @@ python -m scripts.chat --proveedores groq    # forzar un proveedor
 python -m scripts.streaming                  # demo de streaming
 ```
 
+## Exploración: cómo funciona un LLM por dentro
+
+```bash
+python -m exploracion.tokens                            # cómo se tokenizan frases de la rentadora
+python -m exploracion.probabilidades                    # temperatura, top-p y muestreo con numpy
+python -m exploracion.logprobs_ollama --temperatura 0   # opcional: logprobs reales con Ollama
+```
+
 ## Roadmap
 
 Cada ítem es una issue; se cierra con el commit que la resuelve (`Closes #N`).
@@ -62,10 +70,16 @@ Cada ítem es una issue; se cierra con el commit que la resuelve (`Closes #N`).
 - [ ] L01 · Cómo funciona un LLM hoy y el mapa de modelos
 - [x] L02 · Context engineering y prompting profesional
 - [x] L03 · LLMs desde código: API, streaming y tool use
-- [ ] L04 · Claude Code profesional
-- [ ] L05 · MCP: conectar la IA con cualquier sistema
-- [ ] L06 · Automatización con IA: n8n, agentes y código
-- [ ] P1 · Proyecto 1: asistente interno con MCP para un cliente
+- [x] L04 · Cómo se entrena un LLM y qué es un transformer
+- [ ] L05 · Workflows vs agentes: los patrones que funcionan
+- [ ] L06 · Herramientas profesionales: diseño, validación y escritura segura
+- [ ] L07 · Persistencia: reservas y conversaciones en una base de datos
+- [ ] L08 · Embeddings y búsqueda semántica desde cero
+- [ ] L09 · Ingesta de documentos: PDF, chunking y metadatos
+- [ ] L10 · Base vectorial: indexar y recuperar
+- [ ] L11 · Respuestas con citas y RAG como herramienta del agente
+- [ ] L12 · RAG avanzado: híbrido, reranking y reescritura
+- [ ] … (memoria, evals, seguridad, API web y demo pública)
 
 ## Decisiones
 
