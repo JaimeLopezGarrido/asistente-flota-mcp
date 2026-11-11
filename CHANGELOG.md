@@ -1,5 +1,11 @@
 # Cambios
 
+## 0.4.0 · 2026-11-10
+
+- exploracion/: tokenización (tiktoken), temperatura, top-p y muestreo (numpy) y logprobs con Ollama, con tests.
+- ADR 0004: conocimiento con herramientas y RAG, sin fine-tuning.
+- README: sección de exploración y roadmap actualizado.
+
 ## 0.3.0 · 2026-11-08
 
 - Flota ficticia en datos/flota.json y herramientas buscar_disponibilidad, cotizar y consultar_politica, con tests.
