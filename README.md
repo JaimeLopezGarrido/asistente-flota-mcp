@@ -13,19 +13,31 @@ Preguntarle al asistente (desde Claude o desde un chat web/n8n) qué autos hay l
 
 _(GIF o video de la demo: se agrega al cerrar el proyecto)_
 
+## Qué sabe hacer el asistente
+
+- ✓ Responder políticas de la rentadora (requisitos, garantía, Chile, mascotas, pagos) citando la política
+- ✓ Buscar autos libres por fechas y categoría con datos del sistema (ficticios)
+- ✓ Cotizar con temporada alta y cargos extra, sin inventar precios
+- ✓ Elegir el camino según la intención: políticas, cotización, reclamo o fuera de alcance
+- ✓ Derivar reclamos a una persona sin gastar llamadas de más
+- ✓ Seguir funcionando si un proveedor falla (Gemini, Groq, Ollama)
+- Próximamente: reservas con confirmación (L06), persistencia en base de datos (L07), manual con citas (L08 a L11)
+
 ## Arquitectura
 
 ```mermaid
 flowchart LR
-  C[Cliente] -->|mensaje| A[asistente.agente.conversar]
-  I[prompts/agente.md] --> A
-  A -->|mensajes + herramientas| M[Modelo: Gemini, Groq u Ollama]
-  M -->|tool_calls| A
-  A --> H[asistente.herramientas.ejecutar]
-  H --> FL[(datos/flota.json)]
-  H --> PO[(datos/politicas.md)]
-  H -->|resultado JSON| A
-  A -->|respuesta final| C
+  C[Cliente] -->|mensaje| R{Router de intención}
+  R -->|politica| P[Una llamada con las políticas]
+  R -->|cotizacion| A[Agente con herramientas]
+  R -->|reclamo| H[Respuesta fija y derivar a una persona]
+  R -->|fuera_de_alcance| F[Respuesta fija]
+  P -->|pide fechas o precios| A
+  A --> T[buscar_disponibilidad, cotizar, consultar_politica]
+  T --> D[(datos/flota.json y datos/politicas.md)]
+  M[Modelos: Gemini, Groq u Ollama con fallback] -.-> R
+  M -.-> P
+  M -.-> A
 ```
 
 _(Se actualiza a medida que se suman módulos.)_
@@ -55,6 +67,14 @@ python -m scripts.chat --proveedores groq    # forzar un proveedor
 python -m scripts.streaming                  # demo de streaming
 ```
 
+## Probar el router
+
+```bash
+python -m scripts.atender                 # chat que muestra la ruta elegida
+python -m scripts.atender --detalle       # con los logs del router
+python -m scripts.comparar_costos         # tokens estimados: todo al agente vs con router
+```
+
 ## Exploración: cómo funciona un LLM por dentro
 
 ```bash
@@ -71,7 +91,7 @@ Cada ítem es una issue; se cierra con el commit que la resuelve (`Closes #N`).
 - [x] L02 · Context engineering y prompting profesional
 - [x] L03 · LLMs desde código: API, streaming y tool use
 - [x] L04 · Cómo se entrena un LLM y qué es un transformer
-- [ ] L05 · Workflows vs agentes: los patrones que funcionan
+- [x] L05 · Workflows vs agentes: los patrones que funcionan
 - [ ] L06 · Herramientas profesionales: diseño, validación y escritura segura
 - [ ] L07 · Persistencia: reservas y conversaciones en una base de datos
 - [ ] L08 · Embeddings y búsqueda semántica desde cero
@@ -88,3 +108,4 @@ Ver [docs/decisiones/](docs/decisiones/).
 ## Licencia
 
 MIT
+
