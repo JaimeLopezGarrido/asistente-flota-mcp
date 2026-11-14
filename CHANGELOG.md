@@ -1,5 +1,12 @@
 # Cambios
 
+## 0.5.0 · 2026-11-11
+
+- Router de intención (asistente/router.py): cuatro rutas, temperatura 0, JSON validado, contexto del último mensaje y ruta por defecto.
+- Atención por caminos (asistente/atencion.py): políticas en una llamada, agente para cotizar, reclamos y fuera de alcance sin llamadas extra.
+- scripts/atender.py y scripts/comparar_costos.py, con tests del router, de los caminos y de la estimación.
+- ADR 0005 y docs/portfolio.md con la bitácora de L02 a L05.
+
 ## 0.4.0 · 2026-11-10
 
 - exploracion/: tokenización (tiktoken), temperatura, top-p y muestreo (numpy) y logprobs con Ollama, con tests.
