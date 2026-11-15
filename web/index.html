@@ -201,7 +201,7 @@ async function reproducir() {
   if (demo !== "esperando") return;
   demo = "corriendo";
   try {
-    marcar(agregar("pastilla", "Conversación de ejemplo · respuestas reales del asistente")).className = "pastilla ejemplo";
+    marcar(agregar("pastilla", "Conversación de ejemplo")).className = "pastilla ejemplo";
     for (const paso of GUION) {
       if (paso.rapida) {
         const b = [...document.querySelectorAll("#rapidas button")].find(x => x.textContent === paso.pregunta);
@@ -226,7 +226,7 @@ async function reproducir() {
       await pausa(2200);
     }
     demo = "terminado";
-    marcar(agregar("pastilla", "Tu turno: escribí abajo para probarlo de verdad")).className = "pastilla verde ejemplo";
+    marcar(agregar("pastilla", "Tu turno: escribí para probarlo")).className = "pastilla verde ejemplo";
     $("#texto").placeholder = "Escribí tu pregunta…";
   } catch { /* el visitante la cortó */ }
 }
