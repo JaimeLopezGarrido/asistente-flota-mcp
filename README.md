@@ -121,3 +121,4 @@ Ver [docs/decisiones/](docs/decisiones/).
 ## Licencia
 
 MIT
+
