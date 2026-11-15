@@ -5,7 +5,7 @@ from asistente.esquema import Respuesta
 
 VALIDA = (
     '{"intencion": "politica", "respuesta": "Sí, con 72 horas de aviso.", "datos_faltantes": [], '
-    '"derivar_a_humano": false, "politicas_usadas": ["P6"]}'
+    '"derivar_a_humano": false, "politicas_usadas": ["P6"], "paginas_manual": []}'
 )
 
 

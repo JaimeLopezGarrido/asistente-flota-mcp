@@ -77,13 +77,20 @@ def _ollama(sistema: str, mensaje: str) -> tuple[str, str]:
     return modelo, _openai_compatible(base, "ollama", modelo, sistema, mensaje)
 
 
-PROVEEDORES = {"gemini": _gemini, "groq": _groq, "ollama": _ollama}
+def _groq_grande(sistema: str, mensaje: str) -> tuple[str, str]:
+    """Otro modelo de Groq: tiene su propio límite de tokens por minuto en el plan gratis."""
+    modelo = os.environ.get("GROQ_MODEL_GRANDE", "openai/gpt-oss-120b")
+    clave = _clave("GROQ_API_KEY")
+    return modelo, _openai_compatible("https://api.groq.com/openai/v1", clave, modelo, sistema, mensaje)
 
 
-def responder(mensaje: str, proveedores: list[str] | None = None) -> Resultado:
+PROVEEDORES = {"gemini": _gemini, "groq": _groq, "groq_grande": _groq_grande, "ollama": _ollama}
+
+
+def responder(mensaje: str, proveedores: list[str] | None = None, manual: list[dict] | None = None) -> Resultado:
     """Responde un mensaje probando los proveedores en orden hasta obtener JSON válido."""
     orden = proveedores or os.environ.get("PROVEEDORES", "gemini,groq,ollama").split(",")
-    sistema = cargar_sistema()
+    sistema = cargar_sistema(manual=manual)
     entrada = envolver_mensaje(mensaje)
     errores = []
     for nombre in (n.strip() for n in orden):

@@ -15,3 +15,4 @@ class Respuesta(BaseModel):
     datos_faltantes: list[str] = Field(description="Datos que hay que pedirle al cliente para avanzar")
     derivar_a_humano: bool = Field(description="True si tiene que intervenir una persona")
     politicas_usadas: list[str] = Field(description="IDs de las políticas usadas, por ejemplo P6")
+    paginas_manual: list[int] = Field(description="Páginas del manual en las que te basaste (de <manual>), o []")

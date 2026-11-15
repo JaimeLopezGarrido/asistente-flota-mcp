@@ -74,7 +74,7 @@ def test_manda_instrucciones_mensaje_envuelto_y_herramientas(monkeypatch):
     primero = clientes['falso'].pedidos[0]
     assert primero[0]['role'] == 'system'
     assert primero[-1]['content'].startswith('<mensaje_cliente>')
-    assert len(clientes['falso'].herramientas) == 3
+    assert len(clientes['falso'].herramientas) == 4
 
 
 def test_un_error_de_herramienta_vuelve_como_dato(monkeypatch):

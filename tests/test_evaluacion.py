@@ -9,6 +9,7 @@ def _respuesta(**cambios) -> Respuesta:
         "datos_faltantes": [],
         "derivar_a_humano": False,
         "politicas_usadas": ["P5"],
+        "paginas_manual": [],
     }
     return Respuesta(**(base | cambios))
 
