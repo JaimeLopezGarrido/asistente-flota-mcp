@@ -1,5 +1,12 @@
 # Cambios
 
+## 0.6.0 · 2026-11-14
+
+- API web con FastAPI (api/): POST /chat con historial por sesión, límites por sesión y por minuto, errores 422, 429 y 503 y CORS configurable; GET /salud y documentación en /docs.
+- asistente/atencion.py informa el proveedor y las herramientas usadas.
+- tests/test_api.py con el TestClient de FastAPI y proveedores falsos.
+- ADR 0006 y entrada E1 en docs/portfolio.md.
+
 ## 0.5.0 · 2026-11-11
 
 - Router de intención (asistente/router.py): cuatro rutas, temperatura 0, JSON validado, contexto del último mensaje y ruta por defecto.

@@ -41,3 +41,21 @@ Qué construí en cada sesión, qué decidí y cómo lo explicaría. Todos los d
 **Evidencia:** `python -m scripts.comparar_costos`: 2660 tokens de entrada por mensaje solo con el agente contra 2240 con router (16 % menos), con 2,10 contra 2,45 llamadas por mensaje. 24 tests nuevos en verde.
 
 **Cómo lo explicaría:** No todos los mensajes necesitan un agente con herramientas. Puse un clasificador en la puerta que decide el camino: las preguntas de políticas se responden con una sola llamada y los reclamos van directo a una persona. El agente queda para lo que de verdad es abierto, como cotizar con fechas. Medí el efecto en tokens antes de afirmarlo, y si el clasificador falla, el sistema usa el camino más capaz en lugar de cortarse.
+
+## E1 · El chatbot como API web con FastAPI
+
+**Qué construí:** una API web con FastAPI delante del asistente. `POST /chat` recibe el mensaje y un id de sesión y devuelve la respuesta con la ruta que eligió el router, las herramientas usadas y el proveedor que respondió; `GET /salud` sirve para monitoreo. Guarda el historial por sesión, limita el uso por sesión y por minuto y responde errores claros (422, 429 y 503).
+
+**Decisión y trade-off:** elegí FastAPI con sesiones en memoria y límites propios en vez de una base de datos y una librería de rate limiting: menos piezas para una demo de un solo proceso. A cambio, las conversaciones se pierden al reiniciar y no escala a varios procesos (queda para L07). CORS con la lista exacta de orígenes por variable de entorno, nunca `*`, para que otra web no pueda gastar la cuota de la demo.
+
+**Evidencia:** `python -m pytest -q` en verde, con 16 tests nuevos de la API (TestClient y proveedores falsos, sin internet), y la documentación automática funcionando:
+
+![Documentación automática de la API en /docs](img/e1-docs.png)
+
+**Cómo lo explicaría:** El asistente ya no vive solo en mi terminal: cualquier web, app o flujo de n8n le puede hablar por HTTP con un contrato documentado en /docs. Cada respuesta dice qué camino tomó, qué herramientas usó y qué modelo contestó, así puedo comprobar que no inventa. Antes de abrirlo al público le puse límites de uso, porque una demo sin límites se queda sin cuota en minutos. Y los errores son claros para el usuario sin mostrar detalles internos.
+
+### Cómo lo cuento en la entrevista
+
+**ES:** Convertí un asistente que solo andaba en mi terminal en un servicio web con un contrato claro y documentado automáticamente. Cada respuesta muestra la ruta del router, las herramientas usadas y el proveedor, y eso me permite validar que la IA no inventa datos y depurar rápido. Lo protegí con límites de uso y errores claros antes de publicarlo, con tests que no dependen de ningún proveedor. Lo entregué en un PR chico con CI en verde y dejé anotado lo que sigue (persistencia) para la próxima iteración.
+
+**EN:** I turned an assistant that only ran in my terminal into a web service with a clear, auto-documented contract. Every response shows the router's route, the tools used and the provider that answered, which lets me verify the AI isn't making data up and debug quickly. I added usage limits and clear error handling before making it public, covered by tests that don't depend on any LLM provider. I shipped it as a small PR with green CI and documented the next step (persistence) for the following iteration.
