@@ -204,4 +204,4 @@ def test_historial_con_rol_invalido_da_422(agente):
 
 def test_la_raiz_sirve_la_pagina_del_chat():
     r = _cliente().get('/')
-    assert r.status_code == 200 and 'Asistente de la rentadora' in r.text
+    assert r.status_code == 200 and 'Proper Rent a Car' in r.text
