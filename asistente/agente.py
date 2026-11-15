@@ -33,6 +33,8 @@ PROVEEDORES = {
         'gemini-flash-latest',
     ),
     'groq': ('https://api.groq.com/openai/v1', 'GROQ_API_KEY', 'GROQ_MODEL', 'openai/gpt-oss-20b'),
+    # Mismo proveedor, otro modelo: Groq limita tokens por minuto por modelo, así duplicamos el cupo gratis
+    'groq_grande': ('https://api.groq.com/openai/v1', 'GROQ_API_KEY', 'GROQ_MODEL_GRANDE', 'openai/gpt-oss-120b'),
     'ollama': (None, None, 'OLLAMA_MODEL', 'gemma4:e4b'),
 }
 

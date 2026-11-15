@@ -161,10 +161,23 @@ def consultar_politica(politica_id: str) -> dict:
     return {'id': politica_id, 'texto': politicas[politica_id]}
 
 
+def buscar_manual(consulta: str) -> dict:
+    """Busca en el manual del cliente (RAG) y devuelve los fragmentos con su página para citarla."""
+    from rag.buscar import buscar
+
+    if not isinstance(consulta, str) or not consulta.strip():
+        raise ErrorHerramienta('consulta tiene que ser un texto con lo que querés buscar')
+    fragmentos = [{'pagina': f['pagina'], 'seccion': f['seccion'], 'texto': f['texto']} for f in buscar(consulta)]
+    if not fragmentos:
+        return {'fragmentos': [], 'aviso': 'No encontré nada sobre eso en el manual.'}
+    return {'fragmentos': fragmentos}
+
+
 FUNCIONES = {
     'buscar_disponibilidad': buscar_disponibilidad,
     'cotizar': cotizar,
     'consultar_politica': consultar_politica,
+    'buscar_manual': buscar_manual,
 }
 
 _FECHA = {'type': 'string', 'description': 'Fecha en formato AAAA-MM-DD, por ejemplo 2026-12-20'}
@@ -221,6 +234,14 @@ HERRAMIENTAS = [
         'P9 combustible, P10 invierno y caminos.',
         {'politica_id': {'type': 'string', 'enum': [f'P{i}' for i in range(1, 11)]}},
         ['politica_id'],
+    ),
+    _herramienta(
+        'buscar_manual',
+        'Busca en el manual del cliente procedimientos y condiciones que no están en P1 a P10: pinchaduras, '
+        'accidentes, robo, multas, seguro y franquicia, devolución y tolerancia, entrega en el hotel, '
+        'conductores adicionales, sillas para bebé, manejo en ripio. Devuelve fragmentos con su página.',
+        {'consulta': {'type': 'string', 'description': 'Qué buscar, en pocas palabras. Ej: qué hacer si pincho'}},
+        ['consulta'],
     ),
 ]
 

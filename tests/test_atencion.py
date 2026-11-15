@@ -30,6 +30,7 @@ def _politica(intencion: str, texto: str = 'Sí, con jaula o funda (P5).') -> Si
         datos_faltantes=[],
         derivar_a_humano=False,
         politicas_usadas=['P5'],
+        paginas_manual=[],
     )
     return SimpleNamespace(respuesta=respuesta, proveedor='falso')
 

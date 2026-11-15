@@ -7,18 +7,22 @@ y abrir http://127.0.0.1:8000/docs
 
 import logging
 import uuid
+from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from api.config import Ajustes
 from api.esquemas import ErrorApi, PedidoChat, RespuestaChat, Salud
 from api.sesiones import AlmacenDeSesiones, LimitadorPorMinuto, LimiteAlcanzadoError
 from asistente import atencion
 from asistente.llm import SinProveedorError
+from asistente.prompt import envolver_mensaje
 
-VERSION = '0.6.0'
+VERSION = '0.7.0'
+WEB = Path(__file__).resolve().parent.parent / 'web' / 'index.html'
 AVISO_SIN_PROVEEDOR = 'El asistente no está disponible en este momento. Probá de nuevo en unos minutos.'
 
 log = logging.getLogger(__name__)
@@ -59,11 +63,20 @@ def crear_app(ajustes: Ajustes | None = None) -> FastAPI:
     )
     def chat(pedido: PedidoChat, request: Request) -> RespuestaChat:
         """Manda un mensaje al asistente. Es def (no async def) porque atender() espera a la red."""
-        visitante = request.client.host if request.client else 'desconocido'
+        # Detrás del proxy del hosting, la IP real del visitante viene en X-Forwarded-For
+        reenviada = request.headers.get('x-forwarded-for', '').split(',')[0].strip()
+        visitante = reenviada or (request.client.host if request.client else 'desconocido')
         sesion_id = pedido.sesion_id or uuid.uuid4().hex
         try:
             limitador.registrar(visitante)
             previos = sesiones.historial(sesion_id)
+            if not previos and pedido.historial:
+                # Instancia nueva (serverless): usamos lo que guarda el navegador, con los mensajes del
+                # usuario envueltos como datos para que no puedan hacerse pasar por instrucciones
+                previos = [
+                    {'role': m.role, 'content': envolver_mensaje(m.content) if m.role == 'user' else m.content}
+                    for m in pedido.historial[-ajustes.max_historial:]
+                ]
         except LimiteAlcanzadoError as e:
             cabeceras = {'Retry-After': str(e.reintentar_en)} if e.reintentar_en else None
             log.info('sesión %s: límite alcanzado (%s)', sesion_id[:8], e.motivo)
@@ -88,11 +101,17 @@ def crear_app(ajustes: Ajustes | None = None) -> FastAPI:
             ruta=res.ruta,
             motivo=res.motivo,
             herramientas=res.herramientas,
+            fuentes=res.fuentes,
             proveedor=res.proveedor,
             llamadas_llm=res.llamadas_llm,
             derivar_a_humano=res.derivar_a_humano,
             mensajes_restantes=restantes,
         )
+
+    @app.get('/', include_in_schema=False)
+    def pagina_del_chat() -> FileResponse:
+        """La interfaz web del chat (web/index.html), servida por la misma API: sin problemas de CORS."""
+        return FileResponse(WEB, media_type='text/html')
 
     return app
 

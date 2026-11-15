@@ -22,6 +22,8 @@ _(GIF o video de la demo: se agrega al cerrar el proyecto)_
 - ✓ Derivar reclamos a una persona sin gastar llamadas de más
 - ✓ Seguir funcionando si un proveedor falla (Gemini, Groq, Ollama)
 - ✓ Atender por una API web (FastAPI): sesiones, límites de uso, errores claros y CORS configurable
+- ✓ Responder con el manual del cliente (RAG): búsqueda híbrida y citas de página [pág. N]
+- ✓ Demo pública con interfaz web: https://asistente-rentadora-demo.vercel.app
 - Próximamente: reservas con confirmación (L06), persistencia en base de datos (L07), manual con citas (L08 a L11)
 
 ## Arquitectura
@@ -69,6 +71,18 @@ python -m scripts.chat --proveedores groq    # forzar un proveedor
 python -m scripts.streaming                  # demo de streaming
 ```
 
+## Demo online
+
+https://asistente-rentadora-demo.vercel.app (datos ficticios). Debajo de cada respuesta se ve la ruta del router, las herramientas usadas, el proveedor y las páginas del manual citadas.
+
+## Probar el RAG
+
+~~~bash
+python -m scripts.generar_manual    # regenera el PDF desde datos/manual/manual_rentadora.md
+python -m rag.ingesta               # PDF -> fragmentos -> embeddings -> datos/manual/indice.json
+python -m rag.buscar "¿qué hago si pincho una goma?"   # muestra los fragmentos con su página
+~~~
+
 ## Probar la API web
 
 ~~~bash
@@ -111,7 +125,7 @@ Cada ítem es una issue; se cierra con el commit que la resuelve (`Closes #N`).
 - [ ] L11 · Respuestas con citas y RAG como herramienta del agente
 - [ ] L12 · RAG avanzado: híbrido, reranking y reescritura
 - [x] E1 · Sprint: el chatbot como API web con FastAPI
-- [ ] E2 a E4 · Sprints: RAG simple, interfaz web y demo pública
+- [x] E2 a E4 · Sprints: RAG simple con citas, interfaz web y demo pública en Vercel
 - [ ] … (memoria, evals y seguridad)
 
 ## Decisiones

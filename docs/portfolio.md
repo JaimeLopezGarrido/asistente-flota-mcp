@@ -59,3 +59,22 @@ Qué construí en cada sesión, qué decidí y cómo lo explicaría. Todos los d
 **ES:** Convertí un asistente que solo andaba en mi terminal en un servicio web con un contrato claro y documentado automáticamente. Cada respuesta muestra la ruta del router, las herramientas usadas y el proveedor, y eso me permite validar que la IA no inventa datos y depurar rápido. Lo protegí con límites de uso y errores claros antes de publicarlo, con tests que no dependen de ningún proveedor. Lo entregué en un PR chico con CI en verde y dejé anotado lo que sigue (persistencia) para la próxima iteración.
 
 **EN:** I turned an assistant that only ran in my terminal into a web service with a clear, auto-documented contract. Every response shows the router's route, the tools used and the provider that answered, which lets me verify the AI isn't making data up and debug quickly. I added usage limits and clear error handling before making it public, covered by tests that don't depend on any LLM provider. I shipped it as a small PR with green CI and documented the next step (persistence) for the following iteration.
+
+
+## E2 a E4 · RAG con citas, interfaz web y demo pública
+
+**Qué construí:** el asistente ahora responde con un manual del cliente en PDF: lo corta en fragmentos con su página, los indexa con embeddings y búsqueda por palabras, y cada respuesta cita la página de donde sale. Sumé una interfaz web que muestra la ruta, las herramientas y las fuentes, y lo publiqué en Vercel: https://asistente-rentadora-demo.vercel.app
+
+**Decisión y trade-off:** búsqueda híbrida (embeddings + BM25) en un índice JSON en lugar de una base vectorial: para 21 fragmentos es instantáneo y no suma infraestructura, y si Gemini se cae la búsqueda sigue por palabras. Las citas las exijo en la salida estructurada (campo paginas_manual) porque en la prueba real el modelo solo citaba la mitad de las veces.
+
+**Evidencia:** 114 tests en verde; prueba real: "¿Qué hago si pincho una goma?" responde citando [pág. 7], "capital de Francia" queda fuera de alcance, y la consulta de una camioneta a Chile usa buscar_disponibilidad y cotizar.
+
+![El chat en vivo citando el manual](img/e4-chat.png)
+
+**Cómo lo explicaría:** Un chatbot que inventa es peor que no tener chatbot. Por eso cada dato sale de una herramienta o de un documento, y cada respuesta muestra de dónde salió: el usuario y yo podemos verificarlo. Cuando el modelo no citaba, no le pedí "por favor citá": lo hice obligatorio en el formato de salida y lo controla el código.
+
+### Cómo lo cuento en la entrevista
+
+**ES:** Lo dejé online en un día: RAG con citas, interfaz que muestra cómo decidió cada respuesta, y deploy gratuito con límites de uso. Cuando vi en la prueba real que el modelo no citaba siempre, lo resolví en el esquema y no en el prompt, y cuando Groq se quedó sin cupo, sumé un segundo modelo de respaldo.
+
+**EN:** I shipped it in a day: RAG with citations, a UI that shows how each answer was produced, and a free deployment with usage limits. When real tests showed the model didn't always cite its sources, I enforced it in the output schema instead of the prompt, and when Groq hit its rate limit I added a second fallback model.
