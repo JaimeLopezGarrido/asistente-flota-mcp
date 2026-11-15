@@ -1,5 +1,15 @@
 # Cambios
 
+## 0.7.0 · 2026-11-15
+
+- RAG sobre un manual del cliente en PDF (ficticio, 11 páginas): ingesta con pypdf, fragmentos por página, embeddings de Gemini y búsqueda híbrida con BM25 (rag/).
+- Herramienta buscar_manual para el agente; la ruta de políticas también consulta el manual.
+- Citas obligatorias [pág. N] con el campo paginas_manual en la salida estructurada; la API devuelve las fuentes.
+- Segundo modelo de Groq como respaldo (otro cupo de tokens por minuto).
+- Interfaz web del chat (web/index.html) servida en / por la API, con ruta, herramientas y fuentes de cada respuesta.
+- Demo pública en Vercel: https://asistente-rentadora-demo.vercel.app (historial del navegador para serverless, IP real para el límite por minuto).
+- ADR 0007 (RAG) y 0008 (demo en Vercel).
+
 ## 0.6.0 · 2026-11-14
 
 - API web con FastAPI (api/): POST /chat con historial por sesión, límites por sesión y por minuto, errores 422, 429 y 503 y CORS configurable; GET /salud y documentación en /docs.
