@@ -36,6 +36,8 @@ class Atencion:
     llamadas_llm: int
     derivar_a_humano: bool
     historial: list[dict] = field(default_factory=list)
+    proveedor: str = 'ninguno'  # quién escribió la respuesta ('ninguno' = respuesta fija)
+    herramientas: list[str] = field(default_factory=list)  # las que usó el agente, en orden
 
 
 def _ultimo_asistente(historial: list[dict]) -> str | None:
@@ -52,6 +54,7 @@ def _cerrar(
     texto: str,
     llamadas: int,
     derivar: bool,
+    proveedor: str = 'ninguno',
 ) -> Atencion:
     """Respuesta de un camino sin agente, con el historial actualizado."""
     nuevo = [
@@ -59,7 +62,7 @@ def _cerrar(
         {'role': 'user', 'content': envolver_mensaje(mensaje)},
         {'role': 'assistant', 'content': texto},
     ]
-    return Atencion(texto, decision.ruta, decision.motivo, llamadas, derivar, nuevo)
+    return Atencion(texto, decision.ruta, decision.motivo, llamadas, derivar, nuevo, proveedor)
 
 
 def atender(
@@ -86,9 +89,25 @@ def atender(
             respuesta = resultado.respuesta
             if respuesta.intencion not in INTENCIONES_DEL_AGENTE:
                 return _cerrar(
-                    mensaje, previos, decision, respuesta.respuesta, llamadas, respuesta.derivar_a_humano
+                    mensaje,
+                    previos,
+                    decision,
+                    respuesta.respuesta,
+                    llamadas,
+                    respuesta.derivar_a_humano,
+                    resultado.proveedor,
                 )
             log.info('el camino de políticas detectó %s; paso al agente', respuesta.intencion)
 
     res = agente.conversar(mensaje, historial=previos, proveedores=proveedores)
-    return Atencion(res.texto, decision.ruta, decision.motivo, llamadas + res.vueltas, False, res.historial)
+    herramientas = [llamada['herramienta'] for llamada in res.llamadas]
+    return Atencion(
+        res.texto,
+        decision.ruta,
+        decision.motivo,
+        llamadas + res.vueltas,
+        False,
+        res.historial,
+        res.proveedor,
+        herramientas,
+    )

@@ -21,13 +21,15 @@ _(GIF o video de la demo: se agrega al cerrar el proyecto)_
 - ✓ Elegir el camino según la intención: políticas, cotización, reclamo o fuera de alcance
 - ✓ Derivar reclamos a una persona sin gastar llamadas de más
 - ✓ Seguir funcionando si un proveedor falla (Gemini, Groq, Ollama)
+- ✓ Atender por una API web (FastAPI): sesiones, límites de uso, errores claros y CORS configurable
 - Próximamente: reservas con confirmación (L06), persistencia en base de datos (L07), manual con citas (L08 a L11)
 
 ## Arquitectura
 
 ```mermaid
 flowchart LR
-  C[Cliente] -->|mensaje| R{Router de intención}
+  W[Navegador, app o n8n] -->|POST /chat| API[API FastAPI: sesiones, límites y CORS]
+  API -->|mensaje e historial| R{Router de intención}
   R -->|politica| P[Una llamada con las políticas]
   R -->|cotizacion| A[Agente con herramientas]
   R -->|reclamo| H[Respuesta fija y derivar a una persona]
@@ -67,6 +69,15 @@ python -m scripts.chat --proveedores groq    # forzar un proveedor
 python -m scripts.streaming                  # demo de streaming
 ```
 
+## Probar la API web
+
+~~~bash
+python -m uvicorn api.main:app --reload   # y abrir http://127.0.0.1:8000/docs
+curl -s -X POST http://127.0.0.1:8000/chat -H 'Content-Type: application/json' -d '{"mensaje": "¿Aceptan mascotas?"}'
+~~~
+
+`POST /chat` recibe `mensaje` y `sesion_id` (opcional) y devuelve la respuesta con la ruta del router, las herramientas usadas y el proveedor. `GET /salud` dice si el servidor está vivo. Límites y orígenes permitidos: ver `.env.example` y el ADR 0006.
+
 ## Probar el router
 
 ```bash
@@ -99,7 +110,9 @@ Cada ítem es una issue; se cierra con el commit que la resuelve (`Closes #N`).
 - [ ] L10 · Base vectorial: indexar y recuperar
 - [ ] L11 · Respuestas con citas y RAG como herramienta del agente
 - [ ] L12 · RAG avanzado: híbrido, reranking y reescritura
-- [ ] … (memoria, evals, seguridad, API web y demo pública)
+- [x] E1 · Sprint: el chatbot como API web con FastAPI
+- [ ] E2 a E4 · Sprints: RAG simple, interfaz web y demo pública
+- [ ] … (memoria, evals y seguridad)
 
 ## Decisiones
 
