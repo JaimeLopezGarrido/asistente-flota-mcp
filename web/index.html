@@ -6,51 +6,51 @@
 <title>Asistente de la rentadora · demo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta name="color-scheme" content="light">
 <style>
+/* Misma tipografía que el portfolio (jaimelopezgarrido.github.io), con los colores al revés: fondo blanco y letras negras */
 :root {
-  --bg: #ffffff; --soft: #f6f3ee; --line: #e9e3d8; --ink: #1a1916; --muted: #6b665c;
-  --lila: #e7defc; --lila-ink: #5b3fa0; --celeste: #cce6f7; --celeste-ink: #286281;
-  --verde: #d9f2dc; --verde-ink: #2b6a37; --durazno: #ffd8c4; --durazno-ink: #93472d;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1a1916; --soft: #232220; --line: #34322d; --ink: #f3f1ec; --muted: #a8a397;
-    --lila: #33284f; --lila-ink: #d6c8ff; --celeste: #1f3a4c; --celeste-ink: #b8dcf4;
-    --verde: #1f3a24; --verde-ink: #b9e9c0; --durazno: #4a2c20; --durazno-ink: #ffc9ad;
-  }
+  --bg: #ffffff; --soft: #f5f5f5; --line: #e2e2e2; --ink: #0a0a0a; --muted: #6b6b6b; --acento: #e53935;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Geist Mono", Menlo, monospace;
+  --titulo: "Inter Tight", ui-sans-serif, system-ui, sans-serif;
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 Geist, system-ui, sans-serif; display: flex; flex-direction: column; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 300 16px/1.55 var(--sans); display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
+.mono, .meta, .sugerencias button, header span, details.fuente summary, .btn { font-family: var(--mono); font-weight: 500; letter-spacing: .05em; text-transform: uppercase; }
 header { padding: 14px 18px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; }
-header h1 { font: 400 22px/1.2 "Instrument Serif", Georgia, serif; margin: 0; }
-header span { font-size: 13px; color: var(--muted); }
+header h1 { font: 600 22px/1.1 var(--titulo); letter-spacing: -.035em; margin: 0; }
+header span { font-size: 11px; color: var(--muted); }
 header button { margin-left: auto; }
 button { font: inherit; cursor: pointer; }
-.btn { border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 7px 12px; font-size: 14px; }
+.btn { border: 1px solid var(--ink); background: var(--bg); color: var(--ink); border-radius: 99px; padding: 7px 14px; font-size: 11px; }
+.btn:hover { background: var(--ink); color: var(--bg); }
 #mensajes { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
 .burbuja { max-width: 82%; padding: 11px 14px; border-radius: 14px; white-space: pre-wrap; }
-.yo { align-self: flex-end; background: var(--ink); color: var(--bg); border-bottom-right-radius: 4px; }
+.burbuja b { font-weight: 600; }
+.yo { align-self: flex-end; background: var(--ink); color: var(--bg); border-bottom-right-radius: 4px; font-weight: 400; }
 .bot { align-self: flex-start; background: var(--soft); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
-.meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; font: 12px "Geist Mono", monospace; }
-.chip { padding: 2px 8px; border-radius: 4px; }
-.ruta { background: var(--lila); color: var(--lila-ink); }
-.herr { background: var(--celeste); color: var(--celeste-ink); }
-.prov { background: var(--line); color: var(--muted); }
-details.fuente { margin-top: 8px; font-size: 13px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; }
-details.fuente summary { cursor: pointer; color: var(--verde-ink); font-weight: 500; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; font-size: 10.5px; }
+.chip { padding: 3px 8px; border-radius: 99px; border: 1px solid var(--line); background: var(--bg); color: var(--muted); }
+.ruta { border-color: var(--ink); color: var(--ink); }
+.herr { color: var(--acento); border-color: #f3c2c0; }
+details.fuente { margin-top: 8px; font-size: 13px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; }
+details.fuente summary { cursor: pointer; font-size: 10.5px; color: var(--ink); }
 details.fuente p { margin: 6px 0 2px; color: var(--muted); }
 .escribiendo { color: var(--muted); font-size: 14px; }
 .sugerencias { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 18px 10px; }
-.sugerencias button { border: 1px solid var(--line); background: var(--soft); color: var(--ink); border-radius: 99px; padding: 6px 12px; font-size: 14px; }
+.sugerencias button { border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 99px; padding: 7px 12px; font-size: 10.5px; text-align: left; }
+.sugerencias button:hover { border-color: var(--ink); }
 .intro { align-self: center; text-align: center; color: var(--muted); max-width: 520px; font-size: 15px; margin: 8px 0; }
 .intro b { color: var(--ink); font-weight: 500; }
 form { display: flex; gap: 8px; padding: 12px 18px 16px; border-top: 1px solid var(--line); }
-input { flex: 1; font: inherit; padding: 11px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--ink); }
-form button { background: var(--ink); color: var(--bg); border: 0; border-radius: 12px; padding: 0 18px; font-weight: 500; }
-form button[disabled] { opacity: .5; }
-.aviso { align-self: center; font-size: 13px; color: var(--durazno-ink); background: var(--durazno); padding: 6px 12px; border-radius: 8px; }
+input { flex: 1; font: 400 16px var(--sans); padding: 11px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--ink); }
+input:focus { outline: none; border-color: var(--ink); }
+form button { background: var(--ink); color: var(--bg); border: 0; border-radius: 12px; padding: 0 18px; font: 500 12px var(--mono); letter-spacing: .05em; text-transform: uppercase; }
+form button[disabled] { opacity: .4; }
+.aviso { align-self: center; font-size: 13px; color: var(--acento); border: 1px solid #f3c2c0; padding: 6px 12px; border-radius: 8px; }
 </style>
 </head>
 <body>
