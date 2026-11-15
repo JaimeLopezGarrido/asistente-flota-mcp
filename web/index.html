@@ -50,8 +50,8 @@ header svg { width: 20px; height: 20px; }
 .escribiendo i { width: 6px; height: 6px; border-radius: 50%; background: #9aa6ad; animation: salto 1.2s infinite; }
 .escribiendo i:nth-child(2) { animation-delay: .15s; } .escribiendo i:nth-child(3) { animation-delay: .3s; }
 @keyframes salto { 0%, 60%, 100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-3px); opacity: 1; } }
-.rapidas { position: relative; z-index: 1; display: flex; gap: 6px; padding: 4px 14px 8px; overflow-x: auto; scrollbar-width: none; }
-.rapidas button { all: unset; cursor: pointer; flex: none; background: #fff; color: var(--verde); font-size: 13.5px; padding: 7px 12px; border-radius: 18px; box-shadow: 0 1px .5px rgba(11,20,26,.13); }
+.rapidas { position: relative; z-index: 1; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; padding: 4px 12px 8px; }
+.rapidas button { all: unset; cursor: pointer; background: #fff; color: var(--verde); font-size: 13px; padding: 6px 11px; border-radius: 18px; box-shadow: 0 1px .5px rgba(11,20,26,.13); }
 .rapidas button:hover { background: #f5f6f6; }
 .error { align-self: center; background: #fff; color: #b3261e; font-size: 12.5px; padding: 6px 10px; border-radius: 8px; margin: 6px 0; }
 form { position: relative; z-index: 2; display: flex; align-items: flex-end; gap: 6px; padding: 6px 8px; padding-bottom: max(8px, env(safe-area-inset-bottom)); }
