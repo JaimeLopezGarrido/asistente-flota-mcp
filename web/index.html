@@ -61,6 +61,16 @@ input { flex: 1; border: 0; outline: 0; font: 16px var(--sans); padding: 8px 0; 
 #enviar { all: unset; cursor: pointer; width: 46px; height: 46px; border-radius: 50%; background: var(--verde); display: flex; align-items: center; justify-content: center; flex: none; }
 #enviar svg { width: 22px; height: 22px; color: #fff; margin-left: 3px; }
 #enviar[disabled] { opacity: .5; cursor: default; }
+/* Modo demo (?demo=1): conversación de ejemplo que se reproduce sola hasta que el visitante escribe */
+.ejemplo { transform-origin: center; transition: opacity .45s, transform .55s cubic-bezier(.5,0,.75,0), filter .45s, max-height .5s .25s, margin .5s .25s, padding .5s .25s; max-height: 600px; }
+.ejemplo.chau { opacity: 0; transform: translateY(-26px) scale(.82) rotate(-1.5deg); filter: blur(6px); max-height: 0; margin: 0; padding-top: 0; padding-bottom: 0; }
+.yo.ejemplo.chau { transform: translateY(-26px) scale(.82) rotate(1.5deg); }
+.pastilla { align-self: center; background: #fff; color: var(--gris); font-size: 12px; padding: 5px 11px; border-radius: 8px; margin: 8px 0 4px; box-shadow: 0 1px .5px rgba(11,20,26,.13); animation: aparece .45s cubic-bezier(.2,.9,.3,1.3) both; }
+.pastilla.verde { background: var(--verde); color: #fff; }
+@keyframes aparece { from { opacity: 0; transform: translateY(8px) scale(.9); } }
+.rapidas button.tocado { background: #e7f3ef; transform: scale(.95); transition: transform .15s; }
+.rapidas.vuelve { animation: aparece .4s both; }
+@media (prefers-reduced-motion: reduce) { .ejemplo, .pastilla, .rapidas.vuelve { transition: none; animation: none; } }
 </style>
 </head>
 <body>
@@ -164,6 +174,102 @@ $("#nueva").onclick = () => { estado = { sesion: null, historial: [] }; guardar(
 deBot(SALUDO);
 for (const m of estado.historial) m.role === "user" ? mio(m.content) : deBot(m.content);
 if (estado.historial.length) $("#rapidas").style.display = "none";
+// Modo demo (?demo=1, lo usa el portfolio): reproduce una conversación de ejemplo con respuestas reales
+// guardadas del asistente. Si el visitante escribe o toca algo, el ejemplo se va y el chat pasa a ser el real.
+const DEMO = new URLSearchParams(location.search).has("demo") && !estado.historial.length;
+const GUION = [
+  { pregunta: "¿Tienen camioneta del 20 al 24 de diciembre?", rapida: true,
+    respuesta: "Sí, hay una camioneta disponible: Ford Ranger 4x4 (A06).\nCotización del 20 al 24 de diciembre (4 días): **$ 546.000**.\nIncluye 1 200 km y garantía bloqueada de $ 500.000.\n\nEsta es solo una cotización; para confirmar la reserva, contactá a nuestro equipo.",
+    datos: { ruta: "cotizacion", herramientas: ["buscar_disponibilidad", "cotizar"], proveedor: "groq", fuentes: [] } },
+  { pregunta: "¿Y qué hago si pincho una goma en la ruta?",
+    respuesta: "Estacioná en un lugar seguro, poné las balizas y cambiá la rueda por la de auxilio; si no podés, llamá a asistencia en ruta (el servicio no tiene costo). La reparación de la cubierta corre por cuenta del cliente: hasta $30.000 por pinchadura. [pág. 7]",
+    datos: { ruta: "politica", herramientas: [], proveedor: "groq", fuentes: [{ pagina: 7, extracto: "6. Qué hacer si... Pinchadura: estacioná en un lugar seguro, poné las balizas y cambiá la rueda por la de auxilio; si no podés, llamá a asistencia en ruta (el servicio no tiene costo). La reparación de la cubierta corre por cuenta del cliente: hasta $ 30.000 por pinchadura" }] } },
+];
+let demo = DEMO ? "esperando" : "apagado";   // esperando → corriendo → terminado → apagado
+const pausa = ms => new Promise((ok, mal) => setTimeout(() => demo === "corriendo" ? ok() : mal(), ms));
+const marcar = el => { el.classList.add("ejemplo"); return el; };
+
+function avisarPosicion() {
+  // Le dice al portfolio dónde está la primera respuesta rápida, para que su cursor vaya hasta ahí
+  const b = $("#rapidas button");
+  if (!b || parent === window || demo !== "esperando") return;
+  const r = b.getBoundingClientRect();
+  parent.postMessage({ tipo: "demo-listo", x: r.left, y: r.top, w: r.width, h: r.height }, "*");
+}
+
+async function reproducir() {
+  if (demo !== "esperando") return;
+  demo = "corriendo";
+  try {
+    marcar(agregar("pastilla", "Conversación de ejemplo")).className = "pastilla ejemplo";
+    for (const paso of GUION) {
+      if (paso.rapida) {
+        const b = [...document.querySelectorAll("#rapidas button")].find(x => x.textContent === paso.pregunta);
+        b?.classList.add("tocado");
+        await pausa(350);
+        b?.classList.remove("tocado");
+        $("#rapidas").style.display = "none";
+      } else {
+        const caja = $("#texto");
+        for (const letra of paso.pregunta) { caja.value += letra; await pausa(38 + Math.random() * 50); }
+        await pausa(400);
+        caja.value = "";
+      }
+      marcar(mio(paso.pregunta));
+      await pausa(500);
+      const espera = marcar(agregar("bot", '<span class="escribiendo"><i></i><i></i><i></i></span>'));
+      $("#estado").textContent = "escribiendo…";
+      await pausa(1700);
+      espera.remove();
+      $("#estado").textContent = "en línea · demo con datos ficticios";
+      marcar(deBot(paso.respuesta, detalle(paso.datos)));
+      await pausa(2200);
+    }
+    demo = "terminado";
+    marcar(agregar("pastilla", "Tu turno: escribí para probarlo")).className = "pastilla verde ejemplo";
+    $("#texto").placeholder = "Escribí tu pregunta…";
+  } catch { /* el visitante la cortó */ }
+}
+
+function sacarEjemplo() {
+  if (demo === "apagado") return false;
+  demo = "apagado";
+  $("#texto").value = "";
+  $("#texto").placeholder = "Mensaje";
+  $("#estado").textContent = "en línea · demo con datos ficticios";
+  const viejos = [...document.querySelectorAll(".ejemplo")].reverse();
+  if (!viejos.length) return false;
+  viejos.forEach((el, i) => setTimeout(() => el.classList.add("chau"), i * 70));
+  setTimeout(() => {
+    viejos.forEach(el => el.remove());
+    const p = agregar("pastilla", "Listo, ahora es en serio ✨");
+    p.className = "pastilla verde";
+    setTimeout(() => p.remove(), 2200);
+  }, viejos.length * 70 + 650);
+  return true;
+}
+
+if (DEMO) {
+  // Solo cuentan los gestos reales del visitante (isTrusted), no el tipeo del guion
+  const cortar = e => {
+    if (!e.isTrusted || demo === "apagado") return;
+    const habia = demo !== "esperando";
+    sacarEjemplo();
+    if (habia && !e.target.closest("#rapidas")) {
+      $("#rapidas").style.display = "";
+      $("#rapidas").classList.add("vuelve");
+    }
+  };
+  $("#texto").addEventListener("keydown", cortar, true);
+  $("#texto").addEventListener("pointerdown", cortar, true);
+  $("#rapidas").addEventListener("pointerdown", cortar, true);
+  addEventListener("message", e => { if (e.data?.tipo === "demo-click") reproducir(); });
+  addEventListener("load", avisarPosicion);
+  addEventListener("resize", avisarPosicion);
+  avisarPosicion();
+  // Abierto solo (sin el portfolio), arranca por su cuenta
+  if (parent === window) setTimeout(reproducir, 1500);
+}
 </script>
 </body>
 </html>
