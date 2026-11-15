@@ -1,0 +1,10 @@
+{
+  "builds": [
+    {
+      "src": "index.py",
+      "use": "@vercel/python",
+      "config": { "includeFiles": "{asistente,api,rag,prompts,datos,web}/**" }
+    }
+  ],
+  "routes": [{ "src": "/(.*)", "dest": "index.py" }]
+}

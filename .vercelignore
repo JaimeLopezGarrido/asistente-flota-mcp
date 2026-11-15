@@ -1,0 +1,17 @@
+# Nunca subir secretos ni el entorno local
+.env
+.env.*
+!.env.example
+.venv
+.git
+__pycache__
+.pytest_cache
+.ruff_cache
+tests
+exploracion
+scripts
+docs
+datos/manual/*.pdf
+# Vercel usa pyproject.toml antes que requirements.txt; el nuestro solo configura ruff y pytest
+pyproject.toml
+requirements-dev.txt
