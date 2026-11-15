@@ -31,11 +31,17 @@ def _politica(intencion: str, texto: str = 'Sí, con jaula o funda (P5).') -> Si
         derivar_a_humano=False,
         politicas_usadas=['P5'],
     )
-    return SimpleNamespace(respuesta=respuesta)
+    return SimpleNamespace(respuesta=respuesta, proveedor='falso')
 
 
 def _preparar(monkeypatch, ruta, proveedor='falso', politicas=None, agente=None) -> dict:
-    agente_falso = SimpleNamespace(texto='Hay 2 SUV libres.', vueltas=3, historial=[{'role': 'x'}])
+    agente_falso = SimpleNamespace(
+        texto='Hay 2 SUV libres.',
+        vueltas=3,
+        historial=[{'role': 'x'}],
+        proveedor='falso',
+        llamadas=[{'herramienta': 'cotizar'}],
+    )
     espias = {
         'router': _Espia(Decision(ruta, 'prueba', proveedor)),
         'politicas': politicas or _Espia(_politica('politica')),
@@ -115,3 +121,17 @@ def test_si_el_agente_falla_el_error_sube(monkeypatch):
     _preparar(monkeypatch, 'cotizacion', agente=_Espia(error=SinProveedorError('nadie')))
     with pytest.raises(SinProveedorError):
         atencion.atender('¿Hay camionetas?')
+
+
+def test_el_agente_informa_proveedor_y_herramientas(monkeypatch):
+    _preparar(monkeypatch, 'cotizacion')
+    res = atencion.atender('¿Hay SUV del 10 al 14?')
+    assert res.proveedor == 'falso'
+    assert res.herramientas == ['cotizar']
+
+
+def test_las_respuestas_fijas_no_tienen_proveedor_ni_herramientas(monkeypatch):
+    _preparar(monkeypatch, 'reclamo')
+    res = atencion.atender('Me cobraron de más')
+    assert res.proveedor == 'ninguno'
+    assert res.herramientas == []
