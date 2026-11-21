@@ -173,11 +173,53 @@ def buscar_manual(consulta: str) -> dict:
     return {'fragmentos': fragmentos}
 
 
+def preparar_reserva(
+    auto_id: str,
+    desde: str,
+    hasta: str,
+    nombre: str,
+    retiro_aeropuerto: bool = False,
+    mascota: bool = False,
+    cruce_chile: bool = False,
+) -> dict:
+    """Paso 1 de una reserva: valida, re-verifica que el auto esté libre y deja un borrador."""
+    from asistente.reservas import REGISTRO  # import tardío: reservas.py importa este módulo
+
+    return REGISTRO.preparar(
+        {
+            'auto_id': auto_id,
+            'desde': desde,
+            'hasta': hasta,
+            'nombre': nombre,
+            'retiro_aeropuerto': retiro_aeropuerto,
+            'mascota': mascota,
+            'cruce_chile': cruce_chile,
+        }
+    )
+
+
+def crear_reserva(borrador_id: str) -> dict:
+    """Paso 2 (ESCRITURA): convierte un borrador en una reserva pendiente. Idempotente."""
+    from asistente.reservas import REGISTRO
+
+    if not isinstance(borrador_id, str) or not borrador_id.startswith('B-'):
+        raise ErrorHerramienta(
+            f'borrador_id tiene que ser el que devolvió preparar_reserva; llegó {borrador_id!r}'
+        )
+    return REGISTRO.confirmar(borrador_id)
+
+
+# Las que cambian algo en el mundo: el agente las pasa por una puerta antes de correrlas
+HERRAMIENTAS_DE_ESCRITURA = frozenset({'crear_reserva'})
+
+
 FUNCIONES = {
     'buscar_disponibilidad': buscar_disponibilidad,
     'cotizar': cotizar,
     'consultar_politica': consultar_politica,
     'buscar_manual': buscar_manual,
+    'preparar_reserva': preparar_reserva,
+    'crear_reserva': crear_reserva,
 }
 
 _FECHA = {'type': 'string', 'description': 'Fecha en formato AAAA-MM-DD, por ejemplo 2026-12-20'}
@@ -243,6 +285,43 @@ HERRAMIENTAS = [
         {'consulta': {'type': 'string', 'description': 'Qué buscar, en pocas palabras. Ej: qué hacer si pincho'}},
         ['consulta'],
     ),
+    _herramienta(
+        'preparar_reserva',
+        'Paso 1 para reservar. Valida los datos, verifica que el auto siga libre y devuelve un '
+        'borrador con el total y un borrador_id. NO reserva nada. Usala cuando el cliente quiera '
+        'reservar un auto concreto con fechas y ya te haya dicho su nombre. Después mostrale el '
+        'resumen con el borrador_id y preguntale si confirma.',
+        {
+            'auto_id': {'type': 'string', 'description': 'Id del auto, por ejemplo A03'},
+            'desde': _FECHA,
+            'hasta': _FECHA,
+            'nombre': {
+                'type': 'string',
+                'description': 'Nombre y apellido del cliente. Nunca pidas teléfono, mail ni documento.',
+            },
+            'retiro_aeropuerto': {
+                'type': 'boolean',
+                'description': 'true si retira o devuelve en el aeropuerto',
+            },
+            'mascota': {'type': 'boolean', 'description': 'true si viaja con mascota'},
+            'cruce_chile': {'type': 'boolean', 'description': 'true si va a cruzar a Chile'},
+        },
+        ['auto_id', 'desde', 'hasta', 'nombre'],
+    ),
+    _herramienta(
+        'crear_reserva',
+        'Paso 2: crea la reserva PENDIENTE de aprobación a partir del borrador_id de preparar_reserva. '
+        'Usala solo si el cliente, en su último mensaje, confirmó ese resumen (por ejemplo: sí, '
+        'confirmo). Nunca la pidas junto con otra herramienta. Repetirla con el mismo borrador_id '
+        'no duplica la reserva.',
+        {
+            'borrador_id': {
+                'type': 'string',
+                'description': 'El borrador_id que devolvió preparar_reserva, por ejemplo B-1A2B3C4D',
+            },
+        },
+        ['borrador_id'],
+    ),
 ]
 
 
@@ -258,7 +337,8 @@ def ejecutar(nombre: str, argumentos: dict) -> str:
             resultado = {'error': str(e)}
         except TypeError as e:
             resultado = {'error': f'argumentos inválidos para {nombre}: {e}'}
-    log.info('herramienta %s %s -> %s', nombre, argumentos, 'error' if 'error' in resultado else 'ok')
+    # Sin los argumentos: pueden traer el nombre del cliente (datos personales fuera de los logs)
+    log.info('herramienta %s -> %s', nombre, 'error' if 'error' in resultado else 'ok')
     return json.dumps(resultado, ensure_ascii=False)
 
 
