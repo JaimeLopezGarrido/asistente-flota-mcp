@@ -1,5 +1,13 @@
 # Cambios
 
+## 0.8.0 · 2026-11-20
+
+- Reservas en dos pasos (asistente/reservas.py): preparar_reserva valida con Pydantic estricto, re-verifica disponibilidad y devuelve un borrador con vigencia; crear_reserva lo convierte en reserva pendiente de aprobación de forma idempotente.
+- Puerta de escritura en el agente: confirmación explícita del cliente, una escritura por turno y nunca en el mismo pedido del borrador.
+- Lecturas de un turno en paralelo con timeout; los bugs de herramientas vuelven como error al modelo.
+- Los logs ya no guardan los argumentos de las herramientas.
+- 32 tests nuevos y ADR 0009.
+
 ## 0.7.0 · 2026-11-15
 
 - RAG sobre un manual del cliente en PDF (ficticio, 11 páginas): ingesta con pypdf, fragmentos por página, embeddings de Gemini y búsqueda híbrida con BM25 (rag/).

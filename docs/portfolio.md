@@ -78,3 +78,13 @@ Qué construí en cada sesión, qué decidí y cómo lo explicaría. Todos los d
 **ES:** Lo dejé online en un día: RAG con citas, interfaz que muestra cómo decidió cada respuesta, y deploy gratuito con límites de uso. Cuando vi en la prueba real que el modelo no citaba siempre, lo resolví en el esquema y no en el prompt, y cuando Groq se quedó sin cupo, sumé un segundo modelo de respaldo.
 
 **EN:** I shipped it in a day: RAG with citations, a UI that shows how each answer was produced, and a free deployment with usage limits. When real tests showed the model didn't always cite its sources, I enforced it in the output schema instead of the prompt, and when Groq hit its rate limit I added a second fallback model.
+
+## L06 · Herramientas de escritura: reservas con confirmación e idempotencia
+
+**Qué construí:** el asistente ya puede dejar una reserva pendiente de aprobación, en dos pasos: `preparar_reserva` valida los datos, re-verifica que el auto siga libre y devuelve un borrador con el total; `crear_reserva` lo convierte en reserva solo si el cliente confirmó. Además, el agente corre en paralelo las lecturas de un mismo turno, con timeout, y un bug en una herramienta vuelve como dato en vez de cortar la conversación.
+
+**Decisión y trade-off:** la confirmación se controla en código, con una puerta de escritura: una escritura por turno, nunca en el mismo pedido en que se creó el borrador y solo con un sí claro del cliente. El id del borrador es un hash de los datos, así el sí queda atado a esos datos exactos y repetir la llamada (por un reintento o un fallback de proveedor) no duplica la reserva. A cambio, la regla es conservadora: ante un “sí, pero…” vuelve a preguntar. Descarté confiar solo en el prompt y un campo `confirmado` que el modelo podría completar solo.
+
+**Evidencia:** `python -m pytest -q` en verde con 32 tests nuevos (`tests/test_reservas.py` y `tests/test_agente_escritura.py`): diez confirmaciones simultáneas crean una sola reserva, un borrador vencido se rechaza y, si el proveedor se cae después de escribir, el reintento con otro proveedor devuelve la misma reserva.
+
+**Cómo lo explicaría:** Leer datos es barato si sale mal; escribir no. Por eso el asistente nunca reserva en el primer mensaje: arma un borrador, se lo muestra al cliente y espera un sí explícito. Esa regla no depende de que el modelo se porte bien: la controla el código. Y como en sistemas reales todo se reintenta (un timeout, un proveedor caído, un doble clic), cada reserva tiene una clave única que evita duplicados. Lo probé con tests que simulan justamente esos fallos.
