@@ -24,7 +24,9 @@ _(GIF o video de la demo: se agrega al cerrar el proyecto)_
 - ✓ Atender por una API web (FastAPI): sesiones, límites de uso, errores claros y CORS configurable
 - ✓ Responder con el manual del cliente (RAG): búsqueda híbrida y citas de página [pág. N]
 - ✓ Demo pública con interfaz web: https://asistente-rentadora-demo.vercel.app
-- Próximamente: reservas con confirmación (L06), persistencia en base de datos (L07), manual con citas (L08 a L11)
+- ✓ Dejar una reserva pendiente de aprobación en dos pasos (borrador y sí explícito del cliente), sin duplicados
+- ✓ Consultar varias herramientas de lectura a la vez, con timeout, sin cortarse si una falla
+- Próximamente: reservas y conversaciones en una base de datos (L07), RAG más profundo (L08 a L13), memoria (L14)
 
 ## Arquitectura
 
@@ -37,7 +39,11 @@ flowchart LR
   R -->|reclamo| H[Respuesta fija y derivar a una persona]
   R -->|fuera_de_alcance| F[Respuesta fija]
   P -->|pide fechas o precios| A
-  A --> T[buscar_disponibilidad, cotizar, consultar_politica]
+  A --> T[buscar_disponibilidad, cotizar, consultar_politica, buscar_manual]
+  A --> PR[preparar_reserva: borrador validado]
+  A -->|sí explícito del cliente| G{Puerta de escritura}
+  G --> CR[crear_reserva: idempotente]
+  CR --> RR[(Reservas pendientes de aprobación, en memoria hasta L07)]
   T --> D[(datos/flota.json y datos/politicas.md)]
   M[Modelos: Gemini, Groq u Ollama con fallback] -.-> R
   M -.-> P
@@ -117,7 +123,7 @@ Cada ítem es una issue; se cierra con el commit que la resuelve (`Closes #N`).
 - [x] L03 · LLMs desde código: API, streaming y tool use
 - [x] L04 · Cómo se entrena un LLM y qué es un transformer
 - [x] L05 · Workflows vs agentes: los patrones que funcionan
-- [ ] L06 · Herramientas profesionales: diseño, validación y escritura segura
+- [x] L06 · Herramientas profesionales: diseño, validación y escritura segura
 - [ ] L07 · Persistencia: reservas y conversaciones en una base de datos
 - [ ] L08 · Embeddings y búsqueda semántica desde cero
 - [ ] L09 · Ingesta de documentos: PDF, chunking y metadatos
