@@ -25,5 +25,7 @@ node_modules/
 *.log
 *.sqlite3
 *.db
+*.db-wal
+*.db-shm
 .vercel
 .env*

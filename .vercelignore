@@ -12,6 +12,7 @@ exploracion
 scripts
 docs
 datos/manual/*.pdf
+datos/*.db*
 # Vercel usa pyproject.toml antes que requirements.txt; el nuestro solo configura ruff y pytest
 pyproject.toml
 requirements-dev.txt

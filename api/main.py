@@ -21,7 +21,7 @@ from asistente import atencion
 from asistente.llm import SinProveedorError
 from asistente.prompt import envolver_mensaje
 
-VERSION = '0.7.0'
+VERSION = '0.9.0'
 WEB = Path(__file__).resolve().parent.parent / 'web' / 'index.html'
 AVISO_SIN_PROVEEDOR = 'El asistente no está disponible en este momento. Probá de nuevo en unos minutos.'
 

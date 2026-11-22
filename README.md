@@ -26,7 +26,8 @@ _(GIF o video de la demo: se agrega al cerrar el proyecto)_
 - ✓ Demo pública con interfaz web: https://asistente-rentadora-demo.vercel.app
 - ✓ Dejar una reserva pendiente de aprobación en dos pasos (borrador y sí explícito del cliente), sin duplicados
 - ✓ Consultar varias herramientas de lectura a la vez, con timeout, sin cortarse si una falla
-- Próximamente: reservas y conversaciones en una base de datos (L07), RAG más profundo (L08 a L13), memoria (L14)
+- ✓ Guardar reservas y conversaciones en una base SQLite: sobreviven a un reinicio y un auto reservado deja de ofrecerse
+- Próximamente: RAG más profundo (L08 a L13), memoria (L14) y aprobación humana (L15)
 
 ## Arquitectura
 
@@ -43,7 +44,7 @@ flowchart LR
   A --> PR[preparar_reserva: borrador validado]
   A -->|sí explícito del cliente| G{Puerta de escritura}
   G --> CR[crear_reserva: idempotente]
-  CR --> RR[(Reservas pendientes de aprobación, en memoria hasta L07)]
+  CR --> RR[(SQLite: reservas pendientes, borradores y conversaciones)]
   T --> D[(datos/flota.json y datos/politicas.md)]
   M[Modelos: Gemini, Groq u Ollama con fallback] -.-> R
   M -.-> P
@@ -54,7 +55,7 @@ _(Se actualiza a medida que se suman módulos.)_
 
 ## Stack
 
-Python 3.12, SDK oficial de MCP, API de LLM con fallback gratuito, n8n, Docker, GitHub Actions
+Python 3.12, SQLite, SDK oficial de MCP, API de LLM con fallback gratuito, n8n, Docker, GitHub Actions
 
 ## Cómo correrlo
 
@@ -98,6 +99,15 @@ curl -s -X POST http://127.0.0.1:8000/chat -H 'Content-Type: application/json' -
 
 `POST /chat` recibe `mensaje` y `sesion_id` (opcional) y devuelve la respuesta con la ruta del router, las herramientas usadas y el proveedor. `GET /salud` dice si el servidor está vivo. Límites y orígenes permitidos: ver `.env.example` y el ADR 0006.
 
+## Ver la base de datos
+
+~~~bash
+python -m scripts.ver_base                  # versión del esquema, filas por tabla y reservas de la demo
+sqlite3 -header -column datos/rentadora.db 'SELECT * FROM reservas;'
+~~~
+
+La base se crea sola desde `datos/flota.json` la primera vez. Para empezar de cero: `rm datos/rentadora.db*`.
+
 ## Probar el router
 
 ```bash
@@ -124,7 +134,7 @@ Cada ítem es una issue; se cierra con el commit que la resuelve (`Closes #N`).
 - [x] L04 · Cómo se entrena un LLM y qué es un transformer
 - [x] L05 · Workflows vs agentes: los patrones que funcionan
 - [x] L06 · Herramientas profesionales: diseño, validación y escritura segura
-- [ ] L07 · Persistencia: reservas y conversaciones en una base de datos
+- [x] L07 · Persistencia: reservas y conversaciones en una base de datos
 - [ ] L08 · Embeddings y búsqueda semántica desde cero
 - [ ] L09 · Ingesta de documentos: PDF, chunking y metadatos
 - [ ] L10 · Base vectorial: indexar y recuperar

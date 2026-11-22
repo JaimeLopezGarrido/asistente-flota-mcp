@@ -88,3 +88,25 @@ Qué construí en cada sesión, qué decidí y cómo lo explicaría. Todos los d
 **Evidencia:** `python -m pytest -q` en verde con 32 tests nuevos (`tests/test_reservas.py` y `tests/test_agente_escritura.py`): diez confirmaciones simultáneas crean una sola reserva, un borrador vencido se rechaza y, si el proveedor se cae después de escribir, el reintento con otro proveedor devuelve la misma reserva.
 
 **Cómo lo explicaría:** Leer datos es barato si sale mal; escribir no. Por eso el asistente nunca reserva en el primer mensaje: arma un borrador, se lo muestra al cliente y espera un sí explícito. Esa regla no depende de que el modelo se porte bien: la controla el código. Y como en sistemas reales todo se reintenta (un timeout, un proveedor caído, un doble clic), cada reserva tiene una clave única que evita duplicados. Lo probé con tests que simulan justamente esos fallos.
+
+## L07 · Persistencia: reservas y conversaciones en SQLite
+
+**Qué construí:** pasé la flota, las reservas, los borradores y las conversaciones a una base SQLite con una capa de acceso a datos (`asistente/base.py`), migraciones numeradas y reglas en el esquema. Ahora una reserva hecha en el chat sobrevive a un reinicio y las herramientas dejan de ofrecer un auto que alguien acaba de reservar.
+
+**Decisión y trade-off:** elegí SQLite (cero infraestructura, viene con Python) con transacciones `BEGIN IMMEDIATE` en lugar del candado en memoria, que solo servía con un proceso. Descarté seguir con JSON (dos escrituras a la vez pierden datos) y, por ahora, Postgres gestionado (otra cuenta y secretos que la demo no necesita). El costo: en Vercel la base vive en `/tmp` de cada instancia y no es permanente; para un cliente real el siguiente paso es Turso o Postgres, y solo cambia la capa de datos.
+
+**Evidencia:** `python -m pytest -q` con todos los tests en verde. Los de L06 pasaron salvo uno, que asumía que cada registro tenía su propia memoria: lo ajusté para que use una base temporal propia y `python -m scripts.ver_base`:
+
+    Base: .../datos/rentadora.db (esquema versión 2)
+      autos             8 filas
+      reservas          6 filas
+    Reservas de la demo (sin los días bloqueados de la semilla):
+      R-3F9A1C2E  A02  2026-12-10  2026-12-14  pendiente_de_aprobacion
+
+**Cómo lo explicaría:** El asistente ya no se olvida de nada cuando se reinicia. Lo importante no fue cambiar dónde se guarda, sino garantizar que dos clientes no puedan reservar el mismo auto a la vez: verificar y reservar pasan dentro de una misma transacción, y la base rechaza datos imposibles aunque un bug se saltee la validación. Lo probé con tests que simulan un reinicio y con diez confirmaciones simultáneas. Y soy claro con el límite: la demo serverless no es una base permanente, y sé cuál es el próximo paso.
+
+### Cómo lo cuento en la entrevista
+
+**ES:** Pasé el estado del chatbot de memoria a SQLite sin cambiar su comportamiento: los tests de la iteración anterior fueron mi red de seguridad, y uno me avisó de un supuesto oculto (que cada registro tenía su propia memoria) que corregí. Para que la IA no pueda generar dobles reservas, la verificación y la escritura ocurren en una sola transacción y la base tiene reglas propias, así no dependo de que el modelo mande buenos argumentos. Lo entregué en commits chicos con CI en verde y dejé documentado en un ADR el límite de la demo serverless y cómo se resuelve.
+
+**EN:** I moved the chatbot's state from memory to SQLite without changing its behavior: the previous iteration's tests were my safety net, and one of them flagged a hidden assumption (each registry having its own memory) that I fixed. That was my validation. To make sure the AI can't create double bookings, the availability check and the write happen in a single transaction, and the database enforces its own constraints, so I don't rely on the model sending good arguments. I shipped it in small commits with green CI and documented in an ADR the limits of the serverless demo and how to solve them.
