@@ -1,5 +1,12 @@
 # Cambios
 
+## 0.9.0 · 2026-11-21
+
+- Persistencia en SQLite (L07, asistente/base.py): autos, clientes, reservas, borradores y conversaciones, con migraciones numeradas (PRAGMA user_version), claves foráneas, CHECK y transacciones BEGIN IMMEDIATE.
+- Las herramientas leen la disponibilidad de la base: una reserva hecha en el chat ya no aparece como libre.
+- Las conversaciones de la API sobreviven a un reinicio. Ruta configurable con DB_RUTA.
+- scripts/ver_base.py, una base temporal por test (tests/conftest.py) y ADR 0009.
+
 ## 0.8.0 · 2026-11-20
 
 - Reservas en dos pasos (asistente/reservas.py): preparar_reserva valida con Pydantic estricto, re-verifica disponibilidad y devuelve un borrador con vigencia; crear_reserva lo convierte en reserva pendiente de aprobación de forma idempotente.
