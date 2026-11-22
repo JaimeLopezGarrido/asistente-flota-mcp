@@ -1,7 +1,10 @@
-"""Herramientas del asistente sobre datos/flota.json y datos/politicas.md (datos FICTICIOS).
+"""Herramientas del asistente sobre la base (asistente/base.py) y datos/politicas.md (datos FICTICIOS).
 
 Cada herramienta es una función común de Python. El modelo nunca la ejecuta: pide usarla
 y el agente (asistente/agente.py) la corre con ejecutar() y le devuelve el resultado.
+
+Desde L07 los autos y su ocupación viven en la base: una reserva hecha en el chat deja de
+aparecer como libre. datos/flota.json queda como semilla y como configuración de precios.
 """
 
 import json
@@ -9,6 +12,8 @@ import logging
 from datetime import date, timedelta
 from functools import lru_cache
 from pathlib import Path
+
+from asistente import base as bd
 
 log = logging.getLogger(__name__)
 
@@ -25,6 +30,7 @@ class ErrorHerramienta(ValueError):
 
 @lru_cache
 def cargar_flota() -> dict:
+    """Precios, cargos y temporadas de datos/flota.json. Los autos y su ocupación están en la base."""
     return json.loads(FLOTA.read_text(encoding='utf-8'))
 
 
@@ -61,14 +67,6 @@ def _si_o_no(valor, campo: str) -> bool:
     return valor
 
 
-def _libre(auto: dict, inicio: date, fin: date) -> bool:
-    """Libre si ninguna reserva se superpone. Se puede retirar el mismo día que otro devuelve."""
-    for reserva in auto['reservas']:
-        if inicio < date.fromisoformat(reserva['hasta']) and date.fromisoformat(reserva['desde']) < fin:
-            return False
-    return True
-
-
 def _es_temporada_alta(dia: date, temporadas: list[dict]) -> bool:
     return any(date.fromisoformat(t['desde']) <= dia <= date.fromisoformat(t['hasta']) for t in temporadas)
 
@@ -90,13 +88,14 @@ def buscar_disponibilidad(
     categoria = categoria or None
     if categoria is not None and categoria not in CATEGORIAS:
         raise ErrorHerramienta(f'categoría desconocida {categoria!r}; opciones: {list(CATEGORIAS)}')
-    libres = [
-        _ficha(a)
-        for a in cargar_flota()['autos']
-        if (categoria is None or a['categoria'] == categoria)
-        and (a['cruce_chile'] or not cruce_chile)
-        and _libre(a, inicio, fin)
-    ]
+    with bd.obtener().conexion() as con:
+        libres = [
+            _ficha(a)
+            for a in bd.listar_autos(con)
+            if (categoria is None or a['categoria'] == categoria)
+            and (a['cruce_chile'] or not cruce_chile)
+            and bd.auto_libre(con, a['id'], inicio.isoformat(), fin.isoformat())
+        ]
     return {
         'desde': desde,
         'hasta': hasta,
@@ -117,7 +116,9 @@ def cotizar(
     """Precio total de un auto entre dos fechas, con temporada alta y cargos extra."""
     inicio, fin = _rango(desde, hasta)
     flota = cargar_flota()
-    auto = next((a for a in flota['autos'] if a['id'] == auto_id), None)
+    with bd.obtener().conexion() as con:
+        auto = bd.buscar_auto(con, auto_id)
+        disponible = auto is not None and bd.auto_libre(con, auto_id, inicio.isoformat(), fin.isoformat())
     if auto is None:
         raise ErrorHerramienta(f'no existe el auto {auto_id!r}; usá buscar_disponibilidad para ver los ids')
     pedidos = {
@@ -141,7 +142,7 @@ def cotizar(
         'desde': desde,
         'hasta': hasta,
         'dias': dias,
-        'disponible': _libre(auto, inicio, fin),
+        'disponible': disponible,
         'dias_temporada_alta': dias_alta,
         'alquiler': alquiler,
         'extras': extras,

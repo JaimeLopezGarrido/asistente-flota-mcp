@@ -9,6 +9,7 @@ from types import SimpleNamespace
 import pytest
 
 from asistente import agente, herramientas, reservas
+from asistente import base as bd
 
 PEDIDO = {'auto_id': 'A02', 'desde': '2026-12-10', 'hasta': '2026-12-14', 'nombre': 'Ana Pérez'}
 
@@ -94,8 +95,10 @@ def test_sin_confirmacion_no_escribe_aunque_el_modelo_lo_pida(monkeypatch, regis
     assert registro.reservas() == []
 
 
-def test_no_escribe_en_el_mismo_pedido_en_que_se_creo_el_borrador(monkeypatch, registro):
-    otro_registro = reservas.RegistroReservas(hoy=lambda: date(2026, 11, 20))
+def test_no_escribe_en_el_mismo_pedido_en_que_se_creo_el_borrador(monkeypatch, registro, tmp_path):
+    # Desde L07 los registros comparten la base: el registro auxiliar usa su propia base temporal
+    # para calcular el id sin dejar el borrador guardado donde lo va a buscar el agente
+    otro_registro = reservas.RegistroReservas(hoy=lambda: date(2026, 11, 20), base=bd.BaseDeDatos(tmp_path / 'aparte.db'))
     borrador_id = otro_registro.preparar(PEDIDO)['borrador_id']  # el id solo depende de los datos
     guion = [_pide(('preparar_reserva', PEDIDO)), _pide(_crear(borrador_id)), _dice('Confirmás?')]
     _usar(monkeypatch, falso=guion)
