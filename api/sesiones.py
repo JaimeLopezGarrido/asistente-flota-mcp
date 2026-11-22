@@ -1,14 +1,18 @@
-"""Sesiones de conversación en memoria y límites de uso por visitante.
+"""Conversaciones guardadas en SQLite y límite de uso por visitante.
 
-En memoria quiere decir que se pierden al reiniciar el servidor y que no se comparten entre procesos:
-alcanza para una demo con un solo proceso. La persistencia en base de datos llega en L07.
+Las conversaciones viven en la base (asistente/base.py): sobreviven a un reinicio del servidor y las
+ven todos los procesos que usan el mismo archivo. El límite por minuto queda en memoria a propósito:
+es un contador de vida corta y perderlo al reiniciar no le cuesta nada a nadie.
 """
 
+import json
+import sqlite3
 import threading
 import time
-from collections import OrderedDict, deque
+from collections import deque
 from collections.abc import Callable
-from dataclasses import dataclass, field
+
+from asistente import base as bd
 
 VENTANA_SEGUNDOS = 60
 
@@ -22,52 +26,84 @@ class LimiteAlcanzadoError(Exception):
         self.reintentar_en = reintentar_en
 
 
-@dataclass
-class Sesion:
-    historial: list[dict] = field(default_factory=list)
-    mensajes: int = 0
+def _siguiente_uso(con: sqlite3.Connection) -> int:
+    """Contador que solo sube: la conversación con el número más bajo es la que hace más que no se usa."""
+    return con.execute('SELECT COALESCE(MAX(uso), 0) + 1 FROM conversaciones').fetchone()[0]
 
 
 class AlmacenDeSesiones:
     """Historial por sesión, con tope de mensajes por sesión y de sesiones en total."""
 
-    def __init__(self, max_sesiones: int, max_mensajes: int, max_historial: int):
+    def __init__(
+        self,
+        max_sesiones: int,
+        max_mensajes: int,
+        max_historial: int,
+        base: bd.BaseDeDatos | None = None,
+    ):
         self.max_sesiones = max_sesiones
         self.max_mensajes = max_mensajes
         self.max_historial = max_historial
-        self._sesiones: OrderedDict[str, Sesion] = OrderedDict()
-        self._candado = threading.Lock()
+        self._base = base
+
+    @property
+    def base(self) -> bd.BaseDeDatos:
+        """La base propia o la del proceso (en los tests, una temporal)."""
+        return self._base or bd.obtener()
 
     def historial(self, sesion_id: str) -> list[dict]:
         """Copia del historial ([] si la sesión es nueva). Lanza LimiteAlcanzadoError si se agotó."""
-        with self._candado:
-            sesion = self._sesiones.get(sesion_id)
-            if sesion is None:
+        with self.base.transaccion() as con:
+            fila = con.execute(
+                'SELECT mensajes_usados FROM conversaciones WHERE sesion_id = ?', (sesion_id,)
+            ).fetchone()
+            if fila is None:
                 return []
-            if sesion.mensajes >= self.max_mensajes:
+            if fila['mensajes_usados'] >= self.max_mensajes:
                 raise LimiteAlcanzadoError(
                     f'Esta conversación llegó al máximo de {self.max_mensajes} mensajes. Empezá una nueva.'
                 )
-            self._sesiones.move_to_end(sesion_id)
-            return list(sesion.historial)
+            uso = _siguiente_uso(con)
+            con.execute('UPDATE conversaciones SET uso = ? WHERE sesion_id = ?', (uso, sesion_id))
+            filas = con.execute(
+                'SELECT contenido FROM mensajes WHERE sesion_id = ? ORDER BY orden', (sesion_id,)
+            ).fetchall()
+        return [json.loads(f['contenido']) for f in filas]
 
     def guardar(self, sesion_id: str, historial: list[dict]) -> int:
         """Guarda el historial nuevo (recortado) y devuelve cuántos mensajes le quedan a la sesión."""
         recorte = historial[-self.max_historial:]
         while recorte and recorte[0].get('role') != 'user':
             recorte = recorte[1:]
-        with self._candado:
-            sesion = self._sesiones.setdefault(sesion_id, Sesion())
-            sesion.historial = recorte
-            sesion.mensajes += 1
-            self._sesiones.move_to_end(sesion_id)
-            while len(self._sesiones) > self.max_sesiones:
-                self._sesiones.popitem(last=False)  # la que hace más tiempo no se usa
-            return max(self.max_mensajes - sesion.mensajes, 0)
+        filas = [
+            (sesion_id, orden, mensaje['role'], json.dumps(mensaje, ensure_ascii=False))
+            for orden, mensaje in enumerate(recorte)
+        ]
+        with self.base.transaccion() as con:
+            con.execute(
+                'INSERT INTO conversaciones (sesion_id, mensajes_usados, uso) VALUES (?, 1, ?) '
+                'ON CONFLICT (sesion_id) DO UPDATE SET '
+                'mensajes_usados = mensajes_usados + 1, uso = excluded.uso',
+                (sesion_id, _siguiente_uso(con)),
+            )
+            con.execute('DELETE FROM mensajes WHERE sesion_id = ?', (sesion_id,))
+            con.executemany(
+                'INSERT INTO mensajes (sesion_id, orden, rol, contenido) VALUES (?, ?, ?, ?)', filas
+            )
+            usados = con.execute(
+                'SELECT mensajes_usados FROM conversaciones WHERE sesion_id = ?', (sesion_id,)
+            ).fetchone()[0]
+            # Más sesiones que el tope: se borran las que hace más que no se usan (y sus mensajes, en cascada)
+            con.execute(
+                'DELETE FROM conversaciones WHERE sesion_id IN '
+                '(SELECT sesion_id FROM conversaciones ORDER BY uso DESC LIMIT -1 OFFSET ?)',
+                (self.max_sesiones,),
+            )
+        return max(self.max_mensajes - usados, 0)
 
     def cantidad(self) -> int:
-        with self._candado:
-            return len(self._sesiones)
+        with self.base.conexion() as con:
+            return con.execute('SELECT COUNT(*) FROM conversaciones').fetchone()[0]
 
 
 class LimitadorPorMinuto:
