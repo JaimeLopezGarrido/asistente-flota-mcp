@@ -1,5 +1,10 @@
 # Cambios
 
+## 0.10.0 · 2026-11-22
+
+- Laboratorio de embeddings (L08, exploracion/embeddings.py): 20 fichas de políticas y manual, similitud coseno a mano con numpy, casos trampa y modelo local opcional (EmbeddingGemma en Ollama).
+- 16 tests sin red y ADR 0011 (modelo de embeddings y límites de la similitud).
+
 ## 0.9.0 · 2026-11-21
 
 - Persistencia en SQLite (L07, asistente/base.py): autos, clientes, reservas, borradores y conversaciones, con migraciones numeradas (PRAGMA user_version), claves foráneas, CHECK y transacciones BEGIN IMMEDIATE.
