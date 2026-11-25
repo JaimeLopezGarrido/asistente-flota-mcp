@@ -147,3 +147,38 @@ Qué construí en cada sesión, qué decidí y cómo lo explicaría. Todos los d
 **ES:** Antes de confiar en el RAG que ya tenía online, abrí la caja: reimplementé la búsqueda con numpy y medí casos trampa. Descubrí que frases contrarias quedan casi tan cerca como una paráfrasis correcta, así que validé que el sistema no dependa solo de la similitud: umbral, búsqueda híbrida, citas y datos exactos por herramientas. Lo entregué como un módulo aparte con 16 tests sin red y dejé la decisión del modelo en un ADR.
 
 **EN:** Before trusting the RAG I already had online, I opened the box: I reimplemented the search with numpy and measured tricky cases. Opposite sentences ended up almost as close as a correct paraphrase, so I made sure the system doesn't rely on similarity alone: a relevance threshold, hybrid search, citations, and exact data coming from tools. I shipped it as a separate module with 16 offline tests and documented the model choice in an ADR.
+
+## L09 · Ingesta de documentos: PDF, chunking y metadatos
+
+**Qué construí:** un generador de un PDF de práctica armado como los reales (texto corrido, encabezado, pie de página y una tabla) y un laboratorio (`exploracion/chunking.py`) que lo extrae con pypdf conservando la página, saca el ruido de maquetación y lo corta de cuatro formas, con metadatos de fuente, páginas y sección en cada fragmento.
+
+**Decisión y trade-off:** medí cuántos fragmentos cortan oraciones, mezclan secciones o cruzan páginas, y qué datos clave quedan partidos. El producto sigue cortando por oraciones sin cruzar páginas porque el manual actual tiene una sección por página; para PDFs reales de clientes la elección es cortar por secciones y citar un rango de páginas. Descarté el tamaño fijo (parte reglas) y el chunking semántico (más caro, sin mejora medida). Quedó en el ADR 0012.
+
+**Evidencia:** salida de `python -m exploracion.chunking`:
+
+    PDF: folleto_rentadora.pdf | 8 páginas | título: Manual del cliente · Rentadora de autos de Bariloche
+    Texto útil: 6115 caracteres | secciones encontradas: 11
+    
+    estrategia             frag.  prom.  cruzan pág.  mezclan secc.  cortan oración
+    fijo                      15    407            7             11              14
+    fijo_solapado             18    415            8             12              18
+    oraciones_por_pagina      27    297            0             14               6
+    secciones                 14    436            6              0               1
+    
+    ¿Cada dato quedó entero en algún fragmento?
+      permiso notarial + 72 horas
+          fijo=OK  fijo_solapado=OK  oraciones_por_pagina=OK  secciones=OK
+      Pinchadura + auxilio
+          fijo=OK  fijo_solapado=OK  oraciones_por_pagina=OK  secciones=OK
+      ¿Puedo llevar mascotas? + jaula
+          fijo=OK  fijo_solapado=OK  oraciones_por_pagina=OK  secciones=OK
+      Lavado especial + 25.000
+          fijo=OK  fijo_solapado=OK  oraciones_por_pagina=OK  secciones=OK
+
+**Cómo lo explicaría:** La calidad de un RAG se decide antes de la búsqueda, cuando se preparan los documentos. Un PDF no tiene párrafos: tiene letras en posiciones, con encabezados y números de página en el medio. Por eso extraigo página por página para poder citar, saco lo que se repite en todas las hojas y corto respetando las secciones, para que una regla no quede separada de su excepción. No elegí la estrategia por intuición: la medí con un control automático de los datos que tienen que quedar enteros.
+
+### Cómo lo cuento en la entrevista
+
+**ES:** Mi RAG ya funcionaba con un PDF que yo mismo había generado, así que lo puse a prueba con uno armado como los reales. Comparé cuatro formas de cortar el documento y medí cuántos fragmentos partían oraciones, mezclaban secciones o perdían un dato clave. Con esos números documenté cuándo conviene cada estrategia en un ADR, y dejé tests que fallan si un dato importante queda partido.
+
+**EN:** My RAG already worked with a PDF I had generated myself, so I stress-tested it with one laid out like real-world documents. I compared four chunking strategies and measured how many chunks split sentences, mixed sections or lost a key fact. With those numbers I documented in an ADR when each strategy makes sense, and I added tests that fail if an important fact gets split.

@@ -1,5 +1,11 @@
 # Cambios
 
+## 0.11.0 · 2026-11-24
+
+- Folleto PDF de práctica (L09, scripts/generar_folleto.py): el manual en A6 con texto corrido, encabezado, pie de página y una tabla de cargos ficticios.
+- Laboratorio de chunking (exploracion/chunking.py): extracción con pypdf, limpieza de encabezados y pies, 4 estrategias con metadatos de fuente, página y sección, y control de datos partidos.
+- 15 tests y ADR 0012 (chunking y metadatos).
+
 ## 0.10.0 · 2026-11-22
 
 - Laboratorio de embeddings (L08, exploracion/embeddings.py): 20 fichas de políticas y manual, similitud coseno a mano con numpy, casos trampa y modelo local opcional (EmbeddingGemma en Ollama).
