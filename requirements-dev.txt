@@ -6,3 +6,5 @@ numpy>=2.0
 tiktoken>=0.8
 # Cliente HTTP que usa el TestClient de FastAPI (E1)
 httpx>=0.27
+# Generar PDFs de práctica (L09): no es dependencia del producto
+fpdf2>=2.8
