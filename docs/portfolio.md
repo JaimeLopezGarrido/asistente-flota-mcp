@@ -110,3 +110,40 @@ Qué construí en cada sesión, qué decidí y cómo lo explicaría. Todos los d
 **ES:** Pasé el estado del chatbot de memoria a SQLite sin cambiar su comportamiento: los tests de la iteración anterior fueron mi red de seguridad, y uno me avisó de un supuesto oculto (que cada registro tenía su propia memoria) que corregí. Para que la IA no pueda generar dobles reservas, la verificación y la escritura ocurren en una sola transacción y la base tiene reglas propias, así no dependo de que el modelo mande buenos argumentos. Lo entregué en commits chicos con CI en verde y dejé documentado en un ADR el límite de la demo serverless y cómo se resuelve.
 
 **EN:** I moved the chatbot's state from memory to SQLite without changing its behavior: the previous iteration's tests were my safety net, and one of them flagged a hidden assumption (each registry having its own memory) that I fixed. That was my validation. To make sure the AI can't create double bookings, the availability check and the write happen in a single transaction, and the database enforces its own constraints, so I don't rely on the model sending good arguments. I shipped it in small commits with green CI and documented in an ADR the limits of the serverless demo and how to solve them.
+
+## L08 · Embeddings y búsqueda semántica a mano
+
+**Qué construí:** un laboratorio (`exploracion/embeddings.py`) que convierte en vectores las políticas y el manual de la rentadora y busca la ficha más parecida a una pregunta con similitud coseno escrita a mano en numpy, sin base vectorial. Funciona con Gemini en la nube o con EmbeddingGemma local en Ollama, y mide casos donde la similitud engaña.
+
+**Decisión y trade-off:** mantuve `gemini-embedding-001` en el producto (free tier, índice ya hecho y umbral calibrado) y dejé EmbeddingGemma como plan B local para clientes que no pueden mandar datos afuera. Descarté por ahora `gemini-embedding-2`: es mejor para imágenes, pero obliga a reindexar y recalibrar sin una mejora medida. Quedó en el ADR 0011.
+
+**Evidencia:** salida de `python -m exploracion.embeddings --trampas`:
+
+    Modelo: gemini-embedding-001. Similitud coseno entre dos frases:
+    
+      0.970  [negación]
+             Se puede fumar dentro del auto.
+             No se puede fumar dentro del auto.
+      0.980  [otro número]
+             El alquiler incluye 300 km por día.
+             El alquiler incluye 500 km por día.
+      0.982  [antes o después]
+             Cancelación sin cargo hasta 48 horas antes del retiro.
+             Cancelación sin cargo hasta 48 horas después del retiro.
+      0.930  [un dato cambia la regla]
+             La garantía se deja con tarjeta de crédito.
+             La garantía se deja con tarjeta de débito.
+      0.885  [paráfrasis correcta]
+             ¿Puedo llevar a mi perro?
+             Se aceptan mascotas con jaula o funda protectora.
+      0.765  [misma palabra, otro tema]
+             ¿Puedo llevar a mi perro?
+             El perro de la oficina se llama Toto.
+
+**Cómo lo explicaría:** Un embedding es la ubicación de un texto en un mapa de significados: sirve para encontrar "mascotas" cuando alguien pregunta por su perro. Pero mide de qué habla un texto, no si es cierto: en mis pruebas, "se puede fumar" y "no se puede fumar" quedaron casi pegadas. Por eso en el asistente la búsqueda solo trae candidatos: hay un umbral para decir "no sé", se combina con búsqueda por palabras, el modelo cita la fuente y los datos exactos (precios, disponibilidad) salen del sistema, no de la similitud.
+
+### Cómo lo cuento en la entrevista
+
+**ES:** Antes de confiar en el RAG que ya tenía online, abrí la caja: reimplementé la búsqueda con numpy y medí casos trampa. Descubrí que frases contrarias quedan casi tan cerca como una paráfrasis correcta, así que validé que el sistema no dependa solo de la similitud: umbral, búsqueda híbrida, citas y datos exactos por herramientas. Lo entregué como un módulo aparte con 16 tests sin red y dejé la decisión del modelo en un ADR.
+
+**EN:** Before trusting the RAG I already had online, I opened the box: I reimplemented the search with numpy and measured tricky cases. Opposite sentences ended up almost as close as a correct paraphrase, so I made sure the system doesn't rely on similarity alone: a relevance threshold, hybrid search, citations, and exact data coming from tools. I shipped it as a separate module with 16 offline tests and documented the model choice in an ADR.
