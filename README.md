@@ -28,7 +28,8 @@ _(GIF o video de la demo: se agrega al cerrar el proyecto)_
 - ✓ Consultar varias herramientas de lectura a la vez, con timeout, sin cortarse si una falla
 - ✓ Guardar reservas y conversaciones en una base SQLite: sobreviven a un reinicio y un auto reservado deja de ofrecerse
 - ✓ Explicar con números por qué encuentra cada parte del manual: embeddings y similitud coseno a mano, con un modelo en la nube (Gemini) o local (EmbeddingGemma)
-- Próximamente: RAG más profundo (L09 a L13), memoria (L14) y aprobación humana (L15)
+- ✓ Leer PDFs armados como los reales (encabezados, pies de página, secciones que cruzan páginas y tablas) y comparar estrategias de chunking con metadatos de página y sección
+- Próximamente: RAG más profundo (L10 a L13), memoria (L14) y aprobación humana (L15)
 
 ## Arquitectura
 
@@ -125,6 +126,8 @@ python -m exploracion.probabilidades                    # temperatura, top-p y m
 python -m exploracion.logprobs_ollama --temperatura 0   # opcional: logprobs reales con Ollama
 python -m exploracion.embeddings                        # embeddings y similitud coseno a mano (L08)
 python -m exploracion.embeddings --trampas              # casos donde la similitud engaña
+python -m scripts.generar_folleto                       # folleto PDF de práctica (L09)
+python -m exploracion.chunking                          # 4 estrategias de chunking y qué se pierde
 ```
 
 ## Roadmap
@@ -139,7 +142,7 @@ Cada ítem es una issue; se cierra con el commit que la resuelve (`Closes #N`).
 - [x] L06 · Herramientas profesionales: diseño, validación y escritura segura
 - [x] L07 · Persistencia: reservas y conversaciones en una base de datos
 - [x] L08 · Embeddings y búsqueda semántica desde cero
-- [ ] L09 · Ingesta de documentos: PDF, chunking y metadatos
+- [x] L09 · Ingesta de documentos: PDF, chunking y metadatos
 - [ ] L10 · Base vectorial: indexar y recuperar
 - [ ] L11 · Respuestas con citas y RAG como herramienta del agente
 - [ ] L12 · RAG avanzado: híbrido, reranking y reescritura
