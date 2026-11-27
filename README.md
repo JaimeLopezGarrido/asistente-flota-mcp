@@ -29,7 +29,8 @@ _(GIF o video de la demo: se agrega al cerrar el proyecto)_
 - ✓ Guardar reservas y conversaciones en una base SQLite: sobreviven a un reinicio y un auto reservado deja de ofrecerse
 - ✓ Explicar con números por qué encuentra cada parte del manual: embeddings y similitud coseno a mano, con un modelo en la nube (Gemini) o local (EmbeddingGemma)
 - ✓ Leer PDFs armados como los reales (encabezados, pies de página, secciones que cruzan páginas y tablas) y comparar estrategias de chunking con metadatos de página y sección
-- Próximamente: RAG más profundo (L10 a L13), memoria (L14) y aprobación humana (L15)
+- ✓ Guardar el manual en una base vectorial local (Qdrant) y mostrar los fragmentos más parecidos con página, sección y puntaje, con filtros por metadatos
+- Próximamente: RAG más profundo (L11 a L13), memoria (L14) y aprobación humana (L15)
 
 ## Arquitectura
 
@@ -48,6 +49,8 @@ flowchart LR
   G --> CR[crear_reserva: idempotente]
   CR --> RR[(SQLite: reservas pendientes, borradores y conversaciones)]
   T --> D[(datos/flota.json y datos/politicas.md)]
+  I[rag.ingesta: datos/manual/indice.json] --> V[(Qdrant local: base vectorial, L10)]
+  V -.->|se conecta al agente en L11| T
   M[Modelos: Gemini, Groq u Ollama con fallback] -.-> R
   M -.-> P
   M -.-> A
@@ -91,6 +94,18 @@ python -m scripts.generar_manual    # regenera el PDF desde datos/manual/manual_
 python -m rag.ingesta               # PDF -> fragmentos -> embeddings -> datos/manual/indice.json
 python -m rag.buscar "¿qué hago si pincho una goma?"   # muestra los fragmentos con su página
 ~~~
+
+## Probar la base vectorial
+
+~~~bash
+python -m rag.vectorial --indexar                       # carga indice.json en Qdrant local (datos/vectorial/)
+python -m rag.vectorial '¿Puedo cruzar a Chile?'        # top-3 con página, sección y puntaje
+python -m rag.vectorial --secciones                     # secciones para filtrar
+python -m rag.vectorial 'mascotas' --k 5 --seccion '10. Preguntas frecuentes'
+python -m rag.vectorial 'pinché una goma' --comparar    # compara con la búsqueda exacta a mano
+~~~
+
+La carpeta datos/vectorial/ no se versiona: se regenera desde indice.json. Decisión: ADR 0013.
 
 ## Probar la API web
 
@@ -143,7 +158,7 @@ Cada ítem es una issue; se cierra con el commit que la resuelve (`Closes #N`).
 - [x] L07 · Persistencia: reservas y conversaciones en una base de datos
 - [x] L08 · Embeddings y búsqueda semántica desde cero
 - [x] L09 · Ingesta de documentos: PDF, chunking y metadatos
-- [ ] L10 · Base vectorial: indexar y recuperar
+- [x] L10 · Base vectorial: indexar y recuperar
 - [ ] L11 · Respuestas con citas y RAG como herramienta del agente
 - [ ] L12 · RAG avanzado: híbrido, reranking y reescritura
 - [x] E1 · Sprint: el chatbot como API web con FastAPI

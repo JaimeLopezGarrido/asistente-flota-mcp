@@ -1,5 +1,12 @@
 # Cambios
 
+## 0.12.0 · 2026-11-25
+
+- Base vectorial local (L10, rag/vectorial.py): los 21 fragmentos del manual en Qdrant (modo local, sin servidor), con payload de página, sección, texto, fuente y modelo.
+- python -m rag.vectorial muestra los top-k con página, sección y puntaje; filtros por sección y página, umbral, vecinos de un fragmento y comparación con la búsqueda exacta a mano.
+- Chequeo de modelo: no busca si el índice se hizo con otro modelo de embeddings.
+- 11 tests sin red (Qdrant en memoria) y ADR 0013. La demo pública no cambia.
+
 ## 0.11.0 · 2026-11-24
 
 - Folleto PDF de práctica (L09, scripts/generar_folleto.py): el manual en A6 con texto corrido, encabezado, pie de página y una tabla de cargos ficticios.
