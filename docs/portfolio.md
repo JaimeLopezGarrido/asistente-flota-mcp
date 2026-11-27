@@ -182,3 +182,13 @@ Qué construí en cada sesión, qué decidí y cómo lo explicaría. Todos los d
 **ES:** Mi RAG ya funcionaba con un PDF que yo mismo había generado, así que lo puse a prueba con uno armado como los reales. Comparé cuatro formas de cortar el documento y medí cuántos fragmentos partían oraciones, mezclaban secciones o perdían un dato clave. Con esos números documenté cuándo conviene cada estrategia en un ADR, y dejé tests que fallan si un dato importante queda partido.
 
 **EN:** My RAG already worked with a PDF I had generated myself, so I stress-tested it with one laid out like real-world documents. I compared four chunking strategies and measured how many chunks split sentences, mixed sections or lost a key fact. With those numbers I documented in an ADR when each strategy makes sense, and I added tests that fail if an important fact gets split.
+
+## L10 · Base vectorial: indexar y recuperar
+
+**Qué construí:** los fragmentos del manual cargados en una base vectorial (Qdrant en modo local, sin servidor) con su página y sección como metadatos, y un comando que muestra los fragmentos más parecidos a cualquier pregunta, con puntaje, filtros por sección o página y umbral. Más un chequeo de que la base devuelve lo mismo que la búsqueda exacta hecha a mano.
+
+**Decisión y trade-off:** elegí Qdrant local porque tiene filtros completos y el mismo código sirve después contra un servidor o su nube gratis. Descarté sqlite-vec (todavía no llegó a la versión 1), Chroma (su nube se está cerrando) y pgvector (el proyecto no usa Postgres). No la puse todavía en la demo pública: en Vercel el disco es efímero y con 21 fragmentos la búsqueda actual alcanza. Los vectores se regeneran desde indice.json, así que cambiar de base no me ata a un proveedor.
+
+**Evidencia:** `python -m rag.vectorial 'Se me pinchó una goma en la ruta 40' --k 5 --comparar` muestra el top-5 con página y sección y termina en "Búsqueda exacta a mano vs Qdrant: coinciden". `python -m pytest tests/test_vectorial.py -q`: 11 tests en verde, sin internet.
+
+**Cómo lo explicaría:** Un asistente que responde con documentos primero tiene que encontrar el pedazo correcto, y eso lo hace una base vectorial: guarda el significado de cada fragmento como números y devuelve los más parecidos a la pregunta. Le sumé filtros por metadatos, que es donde entran las reglas del negocio: en una clínica, solo la sede del paciente; en un estudio, solo los expedientes de ese cliente. Antes de conectar la búsqueda al modelo, la inspecciono sola: miro si la página correcta aparece arriba y si los puntajes separan bien. Si la búsqueda falla, ningún prompt lo arregla, así que la mido aparte.
