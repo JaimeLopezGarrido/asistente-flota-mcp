@@ -8,3 +8,5 @@ tiktoken>=0.8
 httpx>=0.27
 # Generar PDFs de práctica (L09): no es dependencia del producto
 fpdf2>=2.8
+# Base vectorial local (L10): todavía no la usa la demo de Vercel
+qdrant-client>=1.15

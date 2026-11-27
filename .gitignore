@@ -29,3 +29,6 @@ node_modules/
 *.db-shm
 .vercel
 .env*
+
+# Base vectorial local (L10): se regenera con python -m rag.vectorial --indexar
+datos/vectorial/
